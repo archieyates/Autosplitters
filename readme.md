@@ -1,5 +1,5 @@
 # Autosplitters
-Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for [Kula World](https://www.speedrun.com/kula_world) and [Valkyria Chronicles](ttps://www.speedrun.com/vc).
+Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for [Kula World](https://www.speedrun.com/kula_world) and [Valkyria Chronicles](https://www.speedrun.com/vc).
 
 ## Valkyria Chronicles - WIP
 This autosplitter is a **Work in progress**. See below for details of supported feature sets.
