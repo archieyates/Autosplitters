@@ -1,26 +1,19 @@
 # Autosplitters
 Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for [Kula World](https://www.speedrun.com/kula_world) and [Valkyria Chronicles](https://www.speedrun.com/vc).
 
-## Valkyria Chronicles - WIP
-This autosplitter is a **Work in progress**. See below for details of supported feature sets.
+## Valkyria Chronicles
+This autosplitter is still **Work in progress**. See below for details of supported feature sets.
 
-### Full Features
-- Automatically split on final hit on Maximillian
-
-### Partial Features
-- Partial load removal (does not cover the entire load screen)
-- Support for multiple versions of the game (currently no automatic version detection)
+### Supported Features
+- Split on "Operation Complete"
+- Split on final hit on Maximillian
 
 ### Planned Features
-- Full load removal
-- Automatic detection of game version
-- Automatic splits on "Operation Complete" screen
+- Load Remover
 
 ### Supported Versions
 - Steam
-- Game Pass
-
-There is no automated version detection so user is currently required to remove the version they aren't using from the file
+- Windows Store
 
 ## Kula World
 ### Features
@@ -29,5 +22,3 @@ There is no automated version detection so user is currently required to remove 
 
 ### Supported Versions
 - Supports *SLUS-00724* of **Roll Away** (the alternate name for the game) running on *ePSXe* version *2.0*
-
-If you have an unsupported version of the title (not the emulator) feel free to contact me to get it added
