@@ -14,6 +14,8 @@ state("Valkyria", "Steam")
 	int levelFlag : "Valkyria.exe", 0x16093CC;
 	// Set to 1 when booting the game, 0 when entering first mission post-boot, and 4 when "Operation Complete" is displayed
 	byte operationComplete : "Valkyria.exe", 0x177DA4A;
+
+	bool loading : "Valkyria.exe", 0x1783E9C;
 }
 
 state("Valkyria", "Windows")
@@ -86,6 +88,11 @@ update
 		vars.inFouzen2 = false;
 		print("[VC Autosplitter] Not in Fouzen 2");
 	}
+
+	if(current.loading)
+	{
+		print("[VC Autosplitter] Loading?");
+	}
 }
 
 split
@@ -127,4 +134,9 @@ split
 		vars.maxActive = false;
 		return true;
 	}
+}
+
+isLoading
+{
+	return current.loading;
 }
