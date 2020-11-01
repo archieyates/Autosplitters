@@ -1,5 +1,5 @@
 // Valkyria Chronicles Autosplitter
-// version 1.1
+// version 1.2
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported versions:
 //	- Steam
@@ -7,6 +7,7 @@
 // Supported features
 //	- Split on "Operation Complete"
 //	- Split on killing Maximillion
+// 	- Load Removal
 
 state("Valkyria", "Steam")
 {
@@ -14,7 +15,7 @@ state("Valkyria", "Steam")
 	int levelFlag : "Valkyria.exe", 0x16093CC;
 	// Set to 1 when booting the game, 0 when entering first mission post-boot, and 4 when "Operation Complete" is displayed
 	byte operationComplete : "Valkyria.exe", 0x177DA4A;
-
+	// This boolean is set to true when the Loading Screen icon is being shown
 	bool loading : "Valkyria.exe", 0x1783E9C;
 }
 
@@ -24,6 +25,8 @@ state("Valkyria", "Windows")
 	int levelFlag : "Valkyria.exe", 0x15E2E0C;
 	// Set to 1 when booting the game, 0 when entering first mission post-boot, and 4 when "Operation Complete" is displayed
 	byte operationComplete : "Valkyria.exe", 0x175739A;
+	// This boolean is set to true when the Loading Screen icon is being shown
+	bool loading : "Valkyria.exe", 0x175D8DC;
 }
 
 startup
@@ -38,6 +41,9 @@ startup
 	vars.marberry = 360;
 	vars.selvariaHealth = 1000;
 	vars.maxillianHealth = 3000;
+
+	settings.Add("splitOnMax", true, "Split on Killing Max");
+	settings.SetToolTip("splitOnMax", "Split when killing Maximillian rather than on Operation Complete");
 }
 
 init
@@ -70,8 +76,11 @@ update
 	// If our level flag matches Max's hit point maximum then we are in 18-2
 	if(current.levelFlag == vars.maxillianHealth && !vars.maxActive)
 	{
-		vars.maxActive = true;
-		print("[VC Autosplitter] Maximillion Active");
+		if(settings["splitOnMax"])
+		{
+			vars.maxActive = true;
+			print("[VC Autosplitter] Maximillion Active");
+		}
 	}
 
 	// If the current level flag matches 10-2 and we are not currently there and have not already split there then set us there
@@ -89,9 +98,14 @@ update
 		print("[VC Autosplitter] Not in Fouzen 2");
 	}
 
-	if(current.loading)
+	// Check loading status
+	if(current.loading && !old.loading)
 	{
-		print("[VC Autosplitter] Loading?");
+		print("[VC Autosplitter] Started Loading");
+	}
+	else if (old.loading && !current.loading)
+	{
+		print("[VC Autosplitter] Finished Loading");
 	}
 }
 
