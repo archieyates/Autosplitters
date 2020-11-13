@@ -1,5 +1,5 @@
 // Valkyria Chronicles Autosplitter
-// version 1.2
+// version 1.3
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported versions:
 //	- Steam
@@ -32,14 +32,14 @@ state("Valkyria", "Windows")
 startup
 {
 	vars.maxActive = false;
-	vars.inFouzen2 = false;
-	vars.fouzenSplit = false;
+	vars.allowSplit = true;
+	vars.splitBlocker = 0;
 
 	// Key values that the levelFlag can be set to
-	vars.fouzen1 = 245;
-	vars.fouzen2 = 280;
-	vars.marberry = 360;
-	vars.selvariaHealth = 1000;
+	//vars.fouzen1 = 245;
+	//vars.fouzen2 = 280;
+	//vars.marberry = 360;
+	//vars.selvariaHealth = 1000;
 	vars.maxillianHealth = 3000;
 
 	settings.Add("splitOnMax", true, "Split on Killing Max");
@@ -67,8 +67,8 @@ init
 start
 {
 	vars.maxActive = false;
-	vars.inFouzen2 = false;
-	vars.fouzenSplit = false;
+	vars.allowSplit = true;
+	vars.splitBlocker = 0;
 }
 
 update
@@ -83,21 +83,6 @@ update
 		}
 	}
 
-	// If the current level flag matches 10-2 and we are not currently there and have not already split there then set us there
-	if(current.levelFlag == vars.fouzen2 && old.levelFlag == vars.fouzen1 && !vars.inFouzen2 && !vars.fouzenSplit)
-	{
-		vars.inFouzen2 = true;
-		vars.fouzenSplit = false;
-		print("[VC Autosplitter] In Fouzen 2");
-	}
-
-	// If our InFouzen2 flag is set but the current level flag doesn't match 10-2 then unset us as being in 10-2
-	if(vars.inFouzen2 && current.levelFlag != vars.fouzen2)
-	{
-		vars.inFouzen2 = false;
-		print("[VC Autosplitter] Not in Fouzen 2");
-	}
-
 	// Check loading status
 	if(current.loading && !old.loading)
 	{
@@ -107,45 +92,50 @@ update
 	{
 		print("[VC Autosplitter] Finished Loading");
 	}
+
+	// Force a minimum time to reset split allowance 
+	if(!vars.allowSplit)
+	{
+		vars.splitBlocker = vars.splitBlocker+1;
+
+		// 20 seconds at 60FPS
+		if(vars.splitBlocker >= 1200)
+		{
+			vars.splitBlocker = 0;
+			vars.allowSplit = true;
+			print("[VC Autosplitter] Unblocking splits");
+		}
+	}
 }
 
 split
 {
+	if(!vars.allowSplit)
+	{
+		return false;
+	}
+
 	// If Max has died then split
 	if(vars.maxActive && current.levelFlag == 0 && old.levelFlag != 0)
 	{
 		print("[VC Autosplitter] Split on Max");
+		vars.allowSplit = false;
 		return true;
 	}
 
 	// "Operation Complete"
 	if(current.operationComplete == 4 && old.operationComplete == 0)
 	{
+		vars.maxActive = false;
+
 		// If we killed Max then don't try to split again
 		if(vars.maxActive)
 		{
 			print("[VC Autosplitter] Deactivating Max");
-			vars.maxActive = false;
 			return false;
 		}
 
-		// There's a bug where on NG completing 10-2 will fire the operationComplete flag multiple times
-		if(vars.inFouzen2)
-		{
-			if(vars.fouzenSplit)
-			{
-				print("[VC Autosplitter] Prevented extra Fouzen split");
-				return false;
-			}
-			else
-			{
-				vars.fouzenSplit = true;
-				print("[VC Autosplitter] Fouzen Split");
-				return true;
-			}
-		}
-
-		vars.maxActive = false;
+		vars.allowSplit = false;
 		return true;
 	}
 }
