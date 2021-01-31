@@ -1,5 +1,5 @@
 # Autosplitters
-Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for [Kula World](https://www.speedrun.com/kula_world) and [Valkyria Chronicles](https://www.speedrun.com/vc).
+Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for [Valkyria Chronicles](https://www.speedrun.com/vc), [Squirm](https://www.speedrun.com/squirm), and [Kula World](https://www.speedrun.com/kula_world).
 
 ## Valkyria Chronicles
 ### Features
@@ -10,6 +10,18 @@ Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.c
 ### Supported Versions
 - Steam
 - Windows Store
+
+## Squirm
+### Features
+- Split on each of the keys
+- Split on each of the stars
+- Split on reaching Crackers
+
+### Supported Versions
+- 3.0
+
+### Notes
+- Manual setup required. Please check the "README Squirm.txt" document for details
 
 ## Kula World
 ### Features
