@@ -1,5 +1,5 @@
 // Squirm Autosplitter
-// version 1.1
+// version 1.1.1
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported features
 //	- Split on each of the keys
@@ -164,9 +164,12 @@ update
         // Otherwise move on to next save key
         vars.splitIndex++;
 
-        if(vars.splitIndex < vars.splits.Length && settings[vars.splits[vars.splitIndex]])
+        if(vars.splitIndex < vars.splits.Length)
         {
-            print("[Squirm Autosplitter] Now tracking " + vars.splits[vars.splitIndex]);
+            if(settings[vars.splits[vars.splitIndex]])
+            {
+                print("[Squirm Autosplitter] Now tracking " + vars.splits[vars.splitIndex]);
+            }
         }
         else if (settings["crackers"] && !vars.crackersSplit)
         {
@@ -228,9 +231,12 @@ split
             vars.splitIndex++;
             
             // Check what the next tracked setting is
-            if(vars.splitIndex < vars.splits.Length && settings[vars.splits[vars.splitIndex]])
+            if(vars.splitIndex < vars.splits.Length)
             {
-                print("Now tracking " + vars.splits[vars.splitIndex]);
+                if(settings[vars.splits[vars.splitIndex]])
+                {
+                    print("[Squirm Autosplitter] Now tracking " + vars.splits[vars.splitIndex]);
+                }
             }
             else if (settings["crackers"] && !vars.crackersSplit)
             {
@@ -253,9 +259,12 @@ split
         // Repeat of the update method
         vars.splitIndex++;
 
-        if(vars.splitIndex < vars.splits.Length && settings[vars.splits[vars.splitIndex]])
+        if(vars.splitIndex < vars.splits.Length)
         {
-            print("Now tracking " + vars.splits[vars.splitIndex]);
+            if(settings[vars.splits[vars.splitIndex]])
+            {
+                print("[Squirm Autosplitter] Now tracking " + vars.splits[vars.splitIndex]);
+            }
         }
         else if (settings["crackers"] && !vars.crackersSplit)
         {
