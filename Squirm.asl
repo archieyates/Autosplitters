@@ -4,7 +4,7 @@
 // Supported features
 //	- Any%
 //  - 100%
-//  - Suprise Party
+//  - Surprise Party
 // IMPORTANT
 //  - Only supports game version 3.0
 //  - Requires Environment Variable set up called "squirm" that points at the SQUIRM steam folder (see README)
