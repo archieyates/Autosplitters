@@ -16,6 +16,7 @@ Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.c
 - Split on each of the keys
 - Split on each of the stars
 - Split on reaching Crackers
+- Split on each level of surprise party
 
 ### Supported Versions
 - 3.0
