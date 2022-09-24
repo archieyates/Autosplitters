@@ -168,7 +168,7 @@ split
     {
         if(any)
         {
-            if(settings["skelord"])
+            if(settings["fatty"])
             {
                 targetString = "beatFatty" + vars.delimiter;
             }
