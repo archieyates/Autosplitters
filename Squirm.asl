@@ -4,11 +4,10 @@
 // Supported features
 //	- Any%
 //  - 100%
+//  - Suprise Party
 // IMPORTANT
 //  - Only supports game version 3.0
 //  - Requires Environment Variable set up called "squirm" that points at the SQUIRM steam folder (see README)
-// Planned features
-//  - Suprise Party
 
 state("Squirm") 
 {
@@ -40,6 +39,8 @@ init
     vars.startTracking = false;
     vars.currentLevel = -1;
     vars.previousLevel = -1;
+    vars.partyHighestLevel = -1;
+    vars.changedLevel = false;
 }
  
 exit
@@ -51,6 +52,7 @@ exit
 start
 {
     vars.startTracking = false;
+    vars.partyHighestLevel = -1;
 }
 
 update
@@ -74,11 +76,17 @@ update
         print("[Squirm Autosplitter] Entered Level " + levelNumber);
         vars.previousLevel = vars.currentLevel;
         vars.currentLevel = level;
+        vars.changedLevel = true;
+    }
+    else
+    {
+        vars.changedLevel = false;
     }
 
     var category = timer.Run.CategoryName.ToLower();
     bool any = category.Contains("any");
     bool hundred = category.Contains("100");
+    bool party = category.Contains("party");
 
     // Don't start tracking unless we have entered the first level from the loading screen
     if(!vars.startTracking)
@@ -96,7 +104,7 @@ update
                 return true;
             }
         }
-        else
+        else if (party)
         {
             print("[Squirm Autosplitter] " + vars.startTracking);
             vars.startTracking = true;
@@ -117,222 +125,228 @@ split
 
     bool any = category.Contains("any");
     bool hundred = category.Contains("100");
+    bool party = category.Contains("party");
  
     string targetString = "";
 
-    if(segment == 0)
+    if(any || hundred)
     {
-        if(any)
+        if(segment == 0)
         {
-            if (settings["ludo"])
+            if(any)
             {
-                targetString = "beatLudo" + vars.delimiter;
+                if (settings["ludo"])
+                {
+                    targetString = "beatLudo" + vars.delimiter;
+                }
+                else
+                {
+                    targetString = "hasLudoKey" + vars.delimiter;
+                }   
+            }
+            else if (hundred)
+            {
+                targetString = "workStar" + vars.delimiter;
             }
             else
             {
+                return false;
+            }
+        }
+        else if(segment == 1)
+        {
+            if(any)
+            {
+                if(settings["skelord"])
+                {
+                    targetString = "hasSkeleKey" + vars.delimiter;
+                }
+                else
+                {
+                    targetString = "beatSkele" + vars.delimiter;
+                }
+            }
+            else if (hundred)
+            {
                 targetString = "hasLudoKey" + vars.delimiter;
-            }   
+            }
+            else
+            {
+                return false;
+            }
         }
-        else if (hundred)
+        else if (segment == 2)
         {
-            targetString = "workStar" + vars.delimiter;
+            if(any)
+            {
+                if(settings["fatty"])
+                {
+                    targetString = "beatFatty" + vars.delimiter;
+                }
+                else
+                {
+                    targetString = "hasFattyKey" + vars.delimiter;
+                }
+            }
+            else if (hundred)
+            {
+                targetString = "spookStar" + vars.delimiter;
+            }
+            else
+            {
+                return false;
+            }
         }
-        else
+        else if(segment == 3)
         {
-            return false;
-        }
-    }
-    else if(segment == 1)
-    {
-        if(any)
-        {
-            if(settings["skelord"])
+            if(any)
+            {
+                targetString = "mouseKey" + vars.delimiter;
+            }
+            else if (hundred)
             {
                 targetString = "hasSkeleKey" + vars.delimiter;
             }
             else
             {
-                targetString = "beatSkele" + vars.delimiter;
+                return false;
             }
         }
-        else if (hundred)
+        else if(segment == 4)
         {
-            targetString = "hasLudoKey" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if (segment == 2)
-    {
-        if(any)
-        {
-            if(settings["fatty"])
+            if(any)
             {
-                targetString = "beatFatty" + vars.delimiter;
+                targetString = "towerKey" + vars.delimiter;
+            }
+            else if (hundred)
+            {
+                targetString = "iceStar" + vars.delimiter;
             }
             else
             {
+                return false;
+            }
+        }
+        else if(segment == 5)
+        {
+            if(any)
+            {
+                targetString = "cloudKey" + vars.delimiter;
+            }
+            else if (hundred)
+            {
                 targetString = "hasFattyKey" + vars.delimiter;
             }
-        }
-        else if (hundred)
-        {
-            targetString = "spookStar" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if(segment == 3)
-    {
-        if(any)
-        {
-            targetString = "mouseKey" + vars.delimiter;
-        }
-        else if (hundred)
-        {
-            targetString = "hasSkeleKey" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if(segment == 4)
-    {
-        if(any)
-        {
-            targetString = "towerKey" + vars.delimiter;
-        }
-        else if (hundred)
-        {
-            targetString = "iceStar" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if(segment == 5)
-    {
-        if(any)
-        {
-            targetString = "cloudKey" + vars.delimiter;
-        }
-        else if (hundred)
-        {
-            targetString = "hasFattyKey" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if(segment == 6)
-    {
-        if(any)
-        {
-            if(vars.currentLevel == 160 && vars.previousLevel == 159)
+            else
             {
+                return false;
+            }
+        }
+        else if(segment == 6)
+        {
+            if(any)
+            {
+                if(vars.currentLevel == 160 && vars.previousLevel == 159)
+                {
+                    return true;
+                }
+            }
+            else if (hundred)
+            {
+                targetString = "castleStar" + vars.delimiter;
+            }
+            else
+            {
+            return false; 
+            }
+        }
+        else if(segment == 7)
+        {
+            if(any)
+            {
+                if(vars.currentLevel == 162 && vars.previousLevel == 161)
+                {
+                    return true;
+                }
+            }
+            else if (hundred)
+            {
+                targetString = "mouseKey" + vars.delimiter;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if(segment == 8)
+        {
+            if (hundred)
+            {
+                targetString = "towerStar" + vars.delimiter;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if(segment == 9)
+        {
+            if (hundred)
+            {
+                targetString = "towerKey" + vars.delimiter;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (segment == 10)
+        {
+        if (hundred)
+            {
+                targetString = "spaceStar" + vars.delimiter;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if(segment == 11)
+        {
+            if (hundred)
+            {
+                targetString = "cloudKey" + vars.delimiter;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if(segment == 12)
+        {
+            if (hundred)
+            {
+                if(vars.currentLevel == 160 && vars.previousLevel == 159)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+    else if (party)
+    {
+        if(vars.changedLevel == true)
+        {
+            if(vars.currentLevel >= 180 && vars.currentLevel <= 192 && vars.currentLevel > vars.partyHighestLevel)
+            {
+                vars.partyHighestLevel = vars.currentLevel;
                 return true;
             }
         }
-        else if (hundred)
-        {
-            targetString = "castleStar" + vars.delimiter;
-        }
-        else
-        {
-           return false; 
-        }
-    }
-    else if(segment == 7)
-    {
-        if(any)
-        {
-            if(vars.currentLevel == 162 && vars.previousLevel == 161)
-            {
-                return true;
-            }
-        }
-        else if (hundred)
-        {
-            targetString = "mouseKey" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if(segment == 8)
-    {
-        if (hundred)
-        {
-            targetString = "towerStar" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if(segment == 9)
-    {
-        if (hundred)
-        {
-            targetString = "towerKey" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if (segment == 10)
-    {
-       if (hundred)
-        {
-            targetString = "spaceStar" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if(segment == 11)
-    {
-        if (hundred)
-        {
-            targetString = "cloudKey" + vars.delimiter;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else if(segment == 12)
-    {
-        if (hundred)
-        {
-            if(vars.currentLevel == 160 && vars.previousLevel == 159)
-            {
-                return true;
-            }
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    int start = vars.line.IndexOf(targetString, 0) + targetString.Length;
-    int end = vars.line.IndexOf(",", start);
-    string result = vars.line.Substring(start, end - start);
-
-    if(result == "true")
-    {
-        return true;
     }
         
     return false;
