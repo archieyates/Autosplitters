@@ -336,6 +336,16 @@ split
                 return false;
             }
         }
+
+        // We have our target string so find what its value is set to and use this to split
+        int start = vars.line.IndexOf(targetString, 0) + targetString.Length;
+        int end = vars.line.IndexOf(",", start);
+        string result = vars.line.Substring(start, end - start);
+
+        if(result == "true")
+        {
+            return true;
+        }
     }
     else if (party)
     {
