@@ -1,5 +1,5 @@
 // Squirm Autosplitter
-// version 2.0.1
+// version 2.1
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported features
 //	- Any%
