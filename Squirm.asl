@@ -17,15 +17,6 @@ state("Squirm")
 startup 
 {
     vars.delimiter = "\":";
-
-    settings.Add("ludo", false, "Split on Ludo kill");
-    settings.SetToolTip("ludo", "Split on killing Ludo rather than on collecting their key (Any% only!)");
-
-    settings.Add("skelord", false, "Split on Skelord Key");
-    settings.SetToolTip("skelord", "Split on collecting Skelord's key rather than killing them (Any% only!)");
-
-    settings.Add("fatty", false, "Split on Fatty kill");
-    settings.SetToolTip("fatty", "Split on killing Fatty rather than on collecting his key (Any% only!)");
 }
 
 init 
