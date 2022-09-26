@@ -1,10 +1,11 @@
 // Squirm Autosplitter
-// version 2.1
+// version 2.2
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported features
 //	- Any%
 //  - 100%
-//  - Surprise Party
+//  - Extended Surprise Party
+//  - Autostart for Any% and 100%
 // IMPORTANT
 //  - Only supports game version 3.0
 //  - Requires Environment Variable set up called "squirm" that points at the SQUIRM steam folder (see README)
@@ -17,6 +18,9 @@ state("Squirm")
 startup 
 {
     vars.delimiter = "\":";
+
+    settings.Add("extendedParty", false, "Use Extended Surprise Party Splits");
+	settings.SetToolTip("extendedParty", "Enable the autosplitter for each level of surprise party from 180-192. You still need to manually split for start and finish.");
 }
 
 init 
@@ -43,19 +47,29 @@ exit
 	vars.reader = null;
 }
 
+start
+{
+    // If we have just changed to level 0 then we are in the New Game loading screen
+    if(vars.currentLevel == 0 && vars.changedLevel == true)
+    {
+        if(timer.Run.CategoryName == "Surprise Party")
+        {
+            return false;
+        }
+
+        return true; 
+    }
+}
+
 onStart
 {
     vars.enableSplits = false;
     vars.changedLevel = false;
-    vars.currentLevel = -1;
-    vars.previousLevel = -1;
     vars.partyHighestLevel = -1;
 
-    var category = timer.Run.CategoryName.ToLower();
-    vars.any = category.Contains("any");
-    vars.hundred = category.Contains("100");
-    vars.party = category.Contains("party");
-
+    vars.any = timer.Run.CategoryName == "Any%";
+    vars.hundred = timer.Run.CategoryName == "100%";
+    vars.party = timer.Run.CategoryName == "Surprise Party";
 
     // Get the correct split array
     string[] anySplits = {"hasLudoKey", "beatSkele", "hasFattyKey", "mouseKey", "towerKey", "cloudKey"};
@@ -72,7 +86,14 @@ onStart
     }
     else if (vars.party)
     {
-        print("[Squirm Autosplitter] Surprise Party");
+        if (settings["extendedParty"])
+        {
+            print("[Squirm Autosplitter] Extended Party");
+        }
+        else
+        {
+            print("[Squirm Autosplitter] Surprise Party");
+        }
     }
 }
 
@@ -88,12 +109,6 @@ onReset
 update
 {	
 	if (vars.reader == null) 
-    {
-        return false;
-    }
-
-    // All the update work only matters if the timer is running
-    if(timer.CurrentPhase != TimerPhase.Running) 
     {
         return false;
     }
@@ -140,7 +155,7 @@ split
             if(vars.changedLevel && vars.currentLevel == 2 && vars.previousLevel == 0)
             {
                 vars.enableSplits = true;
-                print("[Squirm Autosplitter] Splits Enabled);
+                print("[Squirm Autosplitter] Splits Enabled");
             }
             else
             {
@@ -179,10 +194,11 @@ split
             return true;
         }
     }
-    else if (vars.party)
+    else if (vars.party && settings["extendedParty"])
     {
         if(vars.changedLevel == true)
         {
+            // Split each time we move to the next party level
             if(vars.currentLevel >= 180 && vars.currentLevel <= 192 && vars.currentLevel > vars.partyHighestLevel)
             {
                 vars.partyHighestLevel = vars.currentLevel;
