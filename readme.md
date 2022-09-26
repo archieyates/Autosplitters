@@ -13,9 +13,9 @@ Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.c
 
 ## Squirm
 ### Features
-- Split on each of the keys
-- Split on each of the stars
-- Split on reaching Crackers
+- Any% standard splits support
+- 100% standard splits support
+- Autostart for Any% and 100%
 - Split on each level of surprise party
 
 ### Supported Versions
