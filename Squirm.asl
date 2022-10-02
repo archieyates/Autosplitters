@@ -1,5 +1,5 @@
 // Squirm Autosplitter
-// version 2.2
+// version 3.0
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported features
 //	- Any%
@@ -10,23 +10,79 @@
 //  - Only supports game version 3.0
 //  - Requires Environment Variable set up called "squirm" that points at the SQUIRM steam folder (see README)
 
-
 state("Squirm") 
 {
 }
 
 startup 
 {
-    vars.delimiter = "\":";
+    // Check for the save file existing
+    vars.filepath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\SQUIRM\\Save\\";
+    string enviro = "squirm";
+    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(enviro))) 
+    {
+        vars.filepath = Environment.GetEnvironmentVariable(enviro) + "\\Save\\";
+    }
 
-    settings.Add("extendedParty", false, "Use Extended Surprise Party Splits");
+    // Error message if file doesn't exist
+    if (!File.Exists(vars.filepath + "Read-Only Save Progress.txt")) 
+    {
+        var timingMessage = MessageBox.Show (
+        "Cannot find Squirm save file at location:\n" + 
+        vars.filepath + 
+        "\n\nEither install Squirm to this location or set up an Environment variable pointing to the Squirm folder" + 
+        "\n\nDetails can be found in readme file.",
+        "LiveSplit | Squirm" );
+    }
+
+    vars.delimiter = "\":";
+    vars.splits = new List<string>();
+
+    settings.Add("main", true, "Any% and 100%");
+
+    vars.SplitVariables = new Dictionary<string, Tuple<string, bool>> 
+	{
+        {"workStar",Tuple.Create("Hub Star", true)},
+    //    {"hasGun",Tuple.Create("Gun", false)},
+        {"beatLudo",Tuple.Create("Kill Ludo", false)},
+        {"hasLudoKey",Tuple.Create("Ludo Key", true)},
+        {"spookStar",Tuple.Create("Spook Star", true)},
+    //    {"hasDubJump",Tuple.Create("Double Jump", false)},
+        {"beatSkele",Tuple.Create("Kill Skelord", true)},
+        {"hasSkeleKey",Tuple.Create("Skelord Key", false)},
+        {"iceStar",Tuple.Create("Ice Star", true)},
+        {"beatFatty",Tuple.Create("Beat Fatty", false)},
+        {"hasFattyKey",Tuple.Create("Fatty Key", true)},
+        {"lever1",Tuple.Create("Castle Lever 1", false)},
+        {"lever2",Tuple.Create("Castle Lever 2", false)},
+        {"castleStar",Tuple.Create("Castle Star", false)},
+        {"lever3",Tuple.Create("Castle Lever 3", false)},
+        {"beatBlocka",Tuple.Create("Killed Blocka", false)},
+        {"mouseKey",Tuple.Create("Castle Key", true)},
+        {"towerKey",Tuple.Create("Tower Key", true)},
+        {"killedSun",Tuple.Create("Killed Sun", false)},
+        {"cloudKey",Tuple.Create("Cotton Key", true)},
+    //    {"inverseGun",Tuple.Create("Inverse World Gun", false)},
+    //   {"inverseJump",Tuple.Create("Inverse World Double Jump", false)},
+        {"openedChest",Tuple.Create("Inverse World Chest", false)},
+        {"inverseWorld",Tuple.Create("Reached Crackers", true)},
+        {"float",Tuple.Create("Fade out after Float Kill", true)},
+    };
+
+    foreach (var tag in vars.SplitVariables)
+    {
+        settings.Add(tag.Key, tag.Value.Item2, tag.Value.Item1, "main");
+    };
+
+    settings.Add("party", true, "Surprise Party");
+    settings.Add("extendedParty", false, "Use Extended Surprise Party Splits", "party");
 	settings.SetToolTip("extendedParty", "Enable the autosplitter for each level of surprise party from 180-192. You still need to manually split for start and finish.");
 }
 
 init 
 {
     // Need an environment variable set up to point at the SQUIRM folder
-	string logPath = Environment.GetEnvironmentVariable("squirm")+"\\Save\\Read-Only Save Progress.txt";
+	string logPath = vars.filepath + "Read-Only Save Progress.txt";
 	vars.line = "";
     vars.fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 	vars.reader = new StreamReader(vars.fileStream); 
@@ -71,28 +127,14 @@ onStart
     vars.hundred = timer.Run.CategoryName == "100%";
     vars.party = timer.Run.CategoryName == "Surprise Party";
 
-    // Get the correct split array
-    string[] anySplits = {"hasLudoKey", "beatSkele", "hasFattyKey", "mouseKey", "towerKey", "cloudKey"};
-    string[] hundredSplits = {"workStar", "hasLudoKey", "spookStar", "hasSkeleKey", "iceStar", "hasFattyKey", "castleStar", "mouseKey", "towerStar", "towerKey", "spaceStar", "cloudKey"};
-    if(vars.any)
+    // Determine all the splits
+    vars.splits.Clear();
+    foreach (var tag in vars.SplitVariables)
     {
-        vars.splitVariables = anySplits;
-        print("[Squirm Autosplitter] Any%");
-    }
-    else if (vars.hundred)
-    {
-        vars.splitVariables = hundredSplits;
-        print("[Squirm Autosplitter] 100%");
-    }
-    else if (vars.party)
-    {
-        if (settings["extendedParty"])
+        if(settings[tag.Key])
         {
-            print("[Squirm Autosplitter] Extended Party");
-        }
-        else
-        {
-            print("[Squirm Autosplitter] Surprise Party");
+            print("[Squirm Autosplitter] Added Split: " + tag.Key);
+            vars.splits.Add(tag.Key);
         }
     }
 }
@@ -143,6 +185,11 @@ update
 
 split
 {
+	if (vars.reader == null) 
+    {
+        return false;
+    }
+
     var segment = timer.CurrentSplitIndex;
     string targetString = "";
 
@@ -163,36 +210,54 @@ split
             }
         }
 
-        // Split on finishing Inverse World
-        if(vars.changedLevel && vars.currentLevel == 160 && vars.previousLevel == 159)
+        int index = 0;
+        bool remove = false;
+        bool splitThisFrame = false;
+        foreach (string split in vars.splits)
         {
-            return true;
-        }
-        
-        // Split on fading to black on Any%
-        if(vars.changedLevel && vars.any && vars.currentLevel == 162 && vars.previousLevel == 161)
-        {
-            return true;
+            if (split == "inverseWorld")
+            {
+                if(vars.changedLevel && vars.currentLevel == 160 && vars.previousLevel == 159)
+                {
+                    splitThisFrame = true;
+                    break;
+                }
+            }
+            else if (split == "float")
+            {
+                if(vars.changedLevel && vars.any && vars.currentLevel == 162 && vars.previousLevel == 161)
+                {
+                    splitThisFrame = true;
+                    break;
+                }
+            }
+            else
+            {
+                // Get the string we will search the save file for based on our segment
+                targetString = split + vars.delimiter;
+
+                // We have our target string so find what its value is set to and use this to split
+                int start = vars.line.IndexOf(targetString, 0) + targetString.Length;
+                int end = vars.line.IndexOf(",", start);
+                string result = vars.line.Substring(start, end - start);
+
+                if(result == "true")
+                {
+                    splitThisFrame = true;
+                    break;
+                }
+            }
+
+            index++;
         }
 
-        // Don't parse the save file if there we have gone beyond the array
-        if(segment >= vars.splitVariables.Length)
+        // If the split was either not in the settings or we found a viable split then remove from the split array
+        if(splitThisFrame)
         {
-            return false;
+            vars.splits.RemoveAt(index);
         }
- 
-        // Get the string we will search the save file for based on our segment
-        targetString = vars.splitVariables[segment] + vars.delimiter;
 
-        // We have our target string so find what its value is set to and use this to split
-        int start = vars.line.IndexOf(targetString, 0) + targetString.Length;
-        int end = vars.line.IndexOf(",", start);
-        string result = vars.line.Substring(start, end - start);
-
-        if(result == "true")
-        {
-            return true;
-        }
+        return splitThisFrame;
     }
     else if (vars.party && settings["extendedParty"])
     {
