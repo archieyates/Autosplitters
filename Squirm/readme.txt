@@ -2,36 +2,6 @@ For the Squirm autosplitter to work a few things must be checked.
 
 The game must be Version 3.0 (latest) version as the autosplitter relies on the save file changes made in that version.
 
-The autosplitter determines what part of the save to read based on your category and split number. To this end your splits need to follow the standard split setup which will be detailed below.
-
-Any%
-- Ludo's Key (can configure settings to use killing Ludo instead)
-- Killing Skelord (can configure settings to use getting Skelord key instead)
-- Fatty's Key (can configure settings to use killing Fatty instead)
-- Castle Key
-- Tower Key
-- Cotton's Key
-- Reaching Crackers
-- Final split
-
-100%
-- First Star 
-- Ludo's Key
-- Spook Star
-- Skelord's Key
-- Ice Star
-- Fatty's Key
-- Castle Star
-- Castle Key
-- Tower Star
-- Tower Key
-- Space Star
-- Space Key
-- Reaching Crackers
-- Post-Float Screen
-
-NOTE: Final split for talking to heart is not supported
-
 You must have an environment variable set up called "squirm" that points at the SQUIRM folder in your steam directory.
 
 on Windows you can do this by:
