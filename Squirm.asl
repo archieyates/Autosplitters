@@ -16,6 +16,42 @@ state("Squirm")
 
 startup 
 {
+    vars.delimiter = "\":";
+    vars.splits = new List<string>();
+
+    settings.Add("main", true, "Any% and 100%");
+
+    vars.SplitVariables = new Dictionary<string, Tuple<string, bool>> 
+	{
+        {"workStar",Tuple.Create("Hub Star", true)},
+        {"beatLudo",Tuple.Create("Kill Ludo", false)},
+        {"hasLudoKey",Tuple.Create("Ludo Key", true)},
+        {"spookStar",Tuple.Create("Spook Star", true)},
+        {"beatSkele",Tuple.Create("Kill Skelord", true)},
+        {"hasSkeleKey",Tuple.Create("Skelord Key", false)},
+        {"iceStar",Tuple.Create("Ice Star", true)},
+        {"beatFatty",Tuple.Create("Beat Fatty", false)},
+        {"hasFattyKey",Tuple.Create("Fatty Key", true)},
+        {"castleStar",Tuple.Create("Castle Star", false)},
+        {"mouseKey",Tuple.Create("Castle Key", true)},
+        {"towerKey",Tuple.Create("Tower Key", true)},
+        {"cloudKey",Tuple.Create("Cotton Key", true)},
+        {"inverseWorld",Tuple.Create("Reached Crackers", true)},
+        {"float",Tuple.Create("Fade out after Float Kill", true)},
+    };
+
+    foreach (var tag in vars.SplitVariables)
+    {
+        settings.Add(tag.Key, tag.Value.Item2, tag.Value.Item1, "main");
+    };
+
+    settings.Add("party", true, "Surprise Party");
+    settings.Add("extendedParty", false, "Use Extended Surprise Party Splits", "party");
+	settings.SetToolTip("extendedParty", "Enable the autosplitter for each level of surprise party from 180-192. You still need to manually split for start and finish.");
+}
+
+init 
+{
     // Check for the save file existing
     vars.filepath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\SQUIRM\\Save\\";
     string enviro = "squirm";
@@ -35,52 +71,6 @@ startup
         "LiveSplit | Squirm" );
     }
 
-    vars.delimiter = "\":";
-    vars.splits = new List<string>();
-
-    settings.Add("main", true, "Any% and 100%");
-
-    vars.SplitVariables = new Dictionary<string, Tuple<string, bool>> 
-	{
-        {"workStar",Tuple.Create("Hub Star", true)},
-    //    {"hasGun",Tuple.Create("Gun", false)},
-        {"beatLudo",Tuple.Create("Kill Ludo", false)},
-        {"hasLudoKey",Tuple.Create("Ludo Key", true)},
-        {"spookStar",Tuple.Create("Spook Star", true)},
-    //    {"hasDubJump",Tuple.Create("Double Jump", false)},
-        {"beatSkele",Tuple.Create("Kill Skelord", true)},
-        {"hasSkeleKey",Tuple.Create("Skelord Key", false)},
-        {"iceStar",Tuple.Create("Ice Star", true)},
-        {"beatFatty",Tuple.Create("Beat Fatty", false)},
-        {"hasFattyKey",Tuple.Create("Fatty Key", true)},
-        {"lever1",Tuple.Create("Castle Lever 1", false)},
-        {"lever2",Tuple.Create("Castle Lever 2", false)},
-        {"castleStar",Tuple.Create("Castle Star", false)},
-        {"lever3",Tuple.Create("Castle Lever 3", false)},
-        {"beatBlocka",Tuple.Create("Killed Blocka", false)},
-        {"mouseKey",Tuple.Create("Castle Key", true)},
-        {"towerKey",Tuple.Create("Tower Key", true)},
-        {"killedSun",Tuple.Create("Killed Sun", false)},
-        {"cloudKey",Tuple.Create("Cotton Key", true)},
-    //    {"inverseGun",Tuple.Create("Inverse World Gun", false)},
-    //   {"inverseJump",Tuple.Create("Inverse World Double Jump", false)},
-        {"openedChest",Tuple.Create("Inverse World Chest", false)},
-        {"inverseWorld",Tuple.Create("Reached Crackers", true)},
-        {"float",Tuple.Create("Fade out after Float Kill", true)},
-    };
-
-    foreach (var tag in vars.SplitVariables)
-    {
-        settings.Add(tag.Key, tag.Value.Item2, tag.Value.Item1, "main");
-    };
-
-    settings.Add("party", true, "Surprise Party");
-    settings.Add("extendedParty", false, "Use Extended Surprise Party Splits", "party");
-	settings.SetToolTip("extendedParty", "Enable the autosplitter for each level of surprise party from 180-192. You still need to manually split for start and finish.");
-}
-
-init 
-{
     // Need an environment variable set up to point at the SQUIRM folder
 	string logPath = vars.filepath + "Read-Only Save Progress.txt";
 	vars.line = "";
