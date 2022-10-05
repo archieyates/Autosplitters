@@ -1,14 +1,13 @@
 // Squirm Autosplitter
-// version 3.0
+// version 4.0
 // Author: Reicha7 (www.archieyates.co.uk)
-// Supported features
+// Supported Categories
 //	- Any%
 //  - 100%
-//  - Extended Surprise Party
-//  - Autostart for Any% and 100%
+//  - Surprise Party
 // IMPORTANT
-//  - Only supports game version 3.0
-//  - Requires Environment Variable set up called "squirm" that points at the SQUIRM steam folder (see README)
+//  - Only confirmed to be supported in version 3.x
+//  - Developed using asl-help (https://github.com/just-ero/asl-help/blob/main/lib/asl-help)
 
 state("Squirm") 
 {
@@ -16,251 +15,240 @@ state("Squirm")
 
 startup 
 {
-    vars.delimiter = "\":";
-    vars.splits = new List<string>();
+    // Without this nothing will work
+    Assembly.Load(File.ReadAllBytes("Components/asl-help")).CreateInstance("Unity");
+    vars.Helper.GameName = "Squirm";
 
+    // We use a cached list of splits based on user settings and then only check against ones we haven't reached
+    vars.Splits = new List<string>();
+
+    // Any% and 100% share a lot of variables so grouping them up
     settings.Add("main", true, "Any% and 100%");
+	settings.SetToolTip("main", "Any% and 100% share a lot of variables");
 
-    vars.SplitVariables = new Dictionary<string, Tuple<string, bool>> 
+    settings.Add("any", true, "Shared", "main");
+	settings.SetToolTip("any", "These variables can be used in both Any% and 100% speedruns");
+
+    settings.Add("100", false, "100%", "main");
+	settings.SetToolTip("100", "These variables will only be needed for 100% speedruns");
+
+    // Any% and 100% splits that we can directly look up in memory
+    vars.TrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>> 
 	{
-        {"workStar",Tuple.Create("Hub Star", true)},
-        {"beatLudo",Tuple.Create("Kill Ludo", false)},
-        {"hasLudoKey",Tuple.Create("Ludo Key", true)},
-        {"spookStar",Tuple.Create("Spook Star", true)},
-        {"beatSkele",Tuple.Create("Kill Skelord", true)},
-        {"hasSkeleKey",Tuple.Create("Skelord Key", false)},
-        {"iceStar",Tuple.Create("Ice Star", true)},
-        {"beatFatty",Tuple.Create("Beat Fatty", false)},
-        {"hasFattyKey",Tuple.Create("Fatty Key", true)},
-        {"castleStar",Tuple.Create("Castle Star", false)},
-        {"mouseKey",Tuple.Create("Castle Key", true)},
-        {"towerKey",Tuple.Create("Tower Key", true)},
-        {"cloudKey",Tuple.Create("Cotton Key", true)},
-        {"inverseWorld",Tuple.Create("Reached Crackers", true)},
-        {"float",Tuple.Create("Fade out after Float Kill", true)},
+        {"beatLudo",Tuple.Create("Kill Ludo", "any", false)},
+        {"hasLudoKey",Tuple.Create("Ludo Key", "any", true)},
+        {"beatSkele",Tuple.Create("Kill Skelord", "any", true)},
+        {"hasSkeleKey",Tuple.Create("Skelord Key", "any", false)},
+        {"beatFatty",Tuple.Create("Beat Fatty", "any", false)},
+        {"hasFattyKey",Tuple.Create("Fatty Key", "any", true)},
+        {"mouseKey",Tuple.Create("Castle Key", "any", true)},
+        {"towerKey",Tuple.Create("Tower Key", "any", true)},
+        {"cloudKey",Tuple.Create("Cotton Key", "any", true)},
+        {"workStar",Tuple.Create("Hub Star", "100", false)},
+        {"spookStar",Tuple.Create("Spook Star", "100", false)},
+        {"iceStar",Tuple.Create("Ice Star", "100", false)},
+        {"castleStar",Tuple.Create("Castle Star", "100", false)},
+        {"towerStar",Tuple.Create("Tower Star", "100", false)},
+        {"spaceStar",Tuple.Create("Space Star", "100", false)},
     };
 
-    foreach (var tag in vars.SplitVariables)
+    foreach (var sv in vars.TrackedSplitVariables)
     {
-        settings.Add(tag.Key, tag.Value.Item2, tag.Value.Item1, "main");
+        settings.Add(sv.Key, sv.Value.Item3, sv.Value.Item1, sv.Value.Item2);
     };
 
-    settings.Add("party", true, "Surprise Party");
-    settings.Add("extendedParty", false, "Use Extended Surprise Party Splits", "party");
-	settings.SetToolTip("extendedParty", "Enable the autosplitter for each level of surprise party from 180-192. You still need to manually split for start and finish.");
+    // Any% and 100% splits that we can't directly track in memory
+    vars.UntrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>> 
+	{
+        {"inverseWorld",Tuple.Create("Reached Crackers", "any", true)},
+        {"float",Tuple.Create("Fade out after Float Kill", "any", true)},
+        {"heart",Tuple.Create("Talk to Heart", "100", false)},
+    };
+
+    foreach (var sv in vars.UntrackedSplitVariables)
+    {
+        settings.Add(sv.Key, sv.Value.Item3, sv.Value.Item1, sv.Value.Item2);
+    };
+
+    // Party
+    settings.Add("party", false, "Surprise Party");
+	settings.SetToolTip("party", "Surprise Party Mode with support for each individual level");
+
+    // Interacting with the present
+    settings.Add("present", true, "Present", "party");
+	settings.SetToolTip("present", "Split when interacting with the present at the end of the party");
+
+    // Level IDs for each of the Surprise Party Levels
+    for (int i = 179; i < 192; i++) 
+    {
+        string ID = "lv" + i;
+        string display = "Level " + i;
+
+        settings.Add(ID, false, display, "party");
+        settings.SetToolTip(ID, "Split when finishing the screen for level " + i);
+    }
 }
 
 init 
 {
-    // Check for the save file existing
-    vars.filepath = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\SQUIRM\\Save\\";
-    string enviro = "squirm";
-    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(enviro))) 
-    {
-        vars.filepath = Environment.GetEnvironmentVariable(enviro) + "\\Save\\";
-    }
+    // Search the game for the memory addresses
+    vars.Helper.TryLoad = (Func<dynamic, bool>)(mono =>
+	{
+        // Tracking level
+        vars.Helper["Level"] = mono.Make<int>("Game", "currentLevel");
 
-    // Error message if file doesn't exist
-    if (!File.Exists(vars.filepath + "Read-Only Save Progress.txt")) 
-    {
-        var timingMessage = MessageBox.Show (
-        "Cannot find Squirm save file at location:\n" + 
-        vars.filepath + 
-        "\n\nEither install Squirm to this location or set up an Environment variable pointing to the Squirm folder" + 
-        "\n\nDetails can be found in readme file.",
-        "LiveSplit | Squirm" );
-    }
+        // All the main game variables
+        foreach (var sv in vars.TrackedSplitVariables)
+        {
+            vars.Helper[sv.Key] = mono.Make<bool>("Game", sv.Key);
+        }
 
-    // Need an environment variable set up to point at the SQUIRM folder
-	string logPath = vars.filepath + "Read-Only Save Progress.txt";
-	vars.line = "";
-    vars.fileStream = new FileStream(logPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-	vars.reader = new StreamReader(vars.fileStream); 
-	print("[Squirm Autosplitter] Opened log " + logPath);
+        // Cutscene used for interacting with objects
+        vars.Helper["Cutscene"] = mono.Make<bool>("Game", "inCutscene");
 
-    vars.enableSplits = false;
-    vars.currentLevel = -1;
-    vars.previousLevel = -1;
-    vars.partyHighestLevel = -1;
-    vars.any = false;
-    vars.hundred = false;
-    vars.party = false;
-}
-
-exit
-{
-	print("[Squirm Autosplitter] Game Closed");
-	vars.reader = null;
+		return true;
+	});
 }
 
 start
 {
-    // If we have just changed to level 0 then we are in the New Game loading screen
-    if(vars.currentLevel == 0 && vars.changedLevel == true)
+    // Start when new game is started
+    if(settings["main"])
     {
-        if(timer.Run.CategoryName == "Surprise Party")
+        if(old.Level != current.Level && current.Level == 0)
         {
-            return false;
+            return true; 
         }
+    }
 
-        return true; 
+    // Start when selecting the present
+    if(settings["party"])
+    {
+     if(current.Cutscene && old.Cutscene != current.Cutscene && current.Level == 16)
+     {
+        return true;
+     }
     }
 }
 
 onStart
 {
-    vars.enableSplits = false;
-    vars.changedLevel = false;
-    vars.partyHighestLevel = -1;
-
-    vars.any = timer.Run.CategoryName == "Any%";
-    vars.hundred = timer.Run.CategoryName == "100%";
-    vars.party = timer.Run.CategoryName == "Surprise Party";
-
-    // Determine all the splits
-    vars.splits.Clear();
-    foreach (var tag in vars.SplitVariables)
+    if(settings["main"])
     {
-        if(settings[tag.Key])
+        // Go through all selected split settings and cache them
+        vars.Splits.Clear();
+        
+        foreach (var split in vars.TrackedSplitVariables)
         {
-            print("[Squirm Autosplitter] Added Split: " + tag.Key);
-            vars.splits.Add(tag.Key);
+            if(settings[split.Key])
+            {
+                //print("[Squirm Autosplitter] Added Split: " + split.Key);
+                vars.Splits.Add(split.Key);
+            }
+        }
+
+        foreach (var split in vars.UntrackedSplitVariables)
+        {
+            if(settings[split.Key])
+            {
+                //print("[Squirm Autosplitter] Added Split: " + split.Key);
+                vars.Splits.Add(split.Key);
+            }
         }
     }
-}
 
-onReset
-{
-    vars.enableSplits = false;
-    vars.changedLevel = false;
-    vars.currentLevel = -1;
-    vars.previousLevel = -1;
-    vars.partyHighestLevel = -1;
-}
-
-update
-{	
-	if (vars.reader == null) 
+    // 179 is first level of surprise party
+    if(settings["party"])
     {
-        return false;
-    }
-
-    // Read the save data
-    vars.fileStream.Seek(0, SeekOrigin.Begin);
-    vars.reader.DiscardBufferedData();
-    vars.line = vars.reader.ReadLine();
-
-    // Check level transitions
-    string levelString = "currentLevel" + vars.delimiter;
-    int start = vars.line.IndexOf(levelString, 0) + levelString.Length;
-    int end = vars.line.IndexOf(",", start);
-    
-    // Get current level
-    string levelNumber = vars.line.Substring(start, end - start);
-    int level = Int32.Parse(levelNumber);
-    
-    // Check for level change
-    if(level != vars.currentLevel)
-    {
-        vars.previousLevel = vars.currentLevel;
-        vars.currentLevel = level;
-        vars.changedLevel = true;
-        print("[Squirm Autosplitter] Changing from Level: " + vars.previousLevel + " to " + vars.currentLevel);
-    }
-    else
-    {
-        vars.changedLevel = false;
+        vars.FurthestPartyLevel = 179;
     }
 }
 
 split
-{
-	if (vars.reader == null) 
+{   
+    // Any% and 100%
+    if(settings["main"])
     {
-        return false;
-    }
-
-    var segment = timer.CurrentSplitIndex;
-    string targetString = "";
-
-    if(vars.any || vars.hundred)
-    {
-        // To stop livesplit autosplitting every frame after a reset (because the save is still valid) 
-        // we wait until the loading screen has transitioned into the first level before enabling splits
-        if(!vars.enableSplits)
-        {
-            if(vars.changedLevel && vars.currentLevel == 2 && vars.previousLevel == 0)
-            {
-                vars.enableSplits = true;
-                print("[Squirm Autosplitter] Splits Enabled");
-            }
-            else
-            {
-                return false;
-            }
-        }
-
         int index = 0;
-        bool remove = false;
         bool splitThisFrame = false;
-        foreach (string split in vars.splits)
+
+        // Go through all the currently cached splits. If we meet the criteria for that split then remove it from the
+        // list and trigger the split
+        foreach (string split in vars.Splits)
         {
-            if (split == "inverseWorld")
+            switch(split) 
             {
-                if(vars.changedLevel && vars.currentLevel == 160 && vars.previousLevel == 159)
+            case "inverseWorld":
+                if(old.Level == 159 && current.Level == 160)
                 {
                     splitThisFrame = true;
-                    break;
                 }
+                break;
+            case "float":
+                if(old.Level == 161 && current.Level == 162)
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            case "heart":
+                if(current.Cutscene && old.Cutscene != current.Cutscene && current.Level == 177)
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            default:
+                // All other splits are just bools in the game memory
+                if(vars.Helper[split].Current && vars.Helper[split].Old != vars.Helper[split].Current)
+                {
+                    splitThisFrame = true;
+                }
+                break;
             }
-            else if (split == "float")
-            {
-                if(vars.changedLevel && vars.any && vars.currentLevel == 162 && vars.previousLevel == 161)
-                {
-                    splitThisFrame = true;
-                    break;
-                }
-            }
-            else
-            {
-                // Get the string we will search the save file for based on our segment
-                targetString = split + vars.delimiter;
 
-                // We have our target string so find what its value is set to and use this to split
-                int start = vars.line.IndexOf(targetString, 0) + targetString.Length;
-                int end = vars.line.IndexOf(",", start);
-                string result = vars.line.Substring(start, end - start);
-
-                if(result == "true")
-                {
-                    splitThisFrame = true;
-                    break;
-                }
+            if(splitThisFrame)
+            {
+                break;
             }
 
             index++;
         }
 
-        // If the split was either not in the settings or we found a viable split then remove from the split array
+        // Once we've split for an event remove it from the list of splits we care about
         if(splitThisFrame)
         {
-            vars.splits.RemoveAt(index);
+            vars.Splits.RemoveAt(index);
         }
 
         return splitThisFrame;
     }
-    else if (vars.party && settings["extendedParty"])
+
+    // Surprise Party
+    if(settings["party"])
     {
-        if(vars.changedLevel == true)
+        if(settings["present"])
         {
-            // Split each time we move to the next party level
-            if(vars.currentLevel >= 180 && vars.currentLevel <= 192 && vars.currentLevel > vars.partyHighestLevel)
+            if(current.Cutscene && old.Cutscene != current.Cutscene && current.Level == 192)
             {
-                vars.partyHighestLevel = vars.currentLevel;
                 return true;
             }
         }
+
+        // Check if we have gone beyond a level and split if we care about that level
+        for (int i = vars.FurthestPartyLevel; i < 192; i++) 
+        {
+            if(current.Level > vars.FurthestPartyLevel && current.Level != old.Level)
+            {
+                 string ID = "lv" + i;
+
+                vars.FurthestPartyLevel = current.Level;
+                if(settings[ID])
+                {   
+                    return true;
+                }
+            }
+        }
+
     }
-        
+
     return false;
 }

@@ -15,11 +15,9 @@ Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.c
 ### Features
 - Any% standard splits support
 - 100% standard splits support
-- Autostart for Any% and 100%
-- Split on each level of surprise party
+- Final Present and individual screen split support for Surprise Party
+- Autostart for Any%, 100%, and Surprise Party
 
 ### Supported Versions
 - 3.0
 
-### Notes
-- Manual setup required. Please check the "readme.txt" document for details
