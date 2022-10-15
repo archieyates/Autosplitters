@@ -13,8 +13,10 @@ Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.c
 
 ## Squirm
 ### Features
+- Game Time timing for Any% and 100%
 - Any% standard splits support
 - 100% standard splits support
+- RTA timing for Surprise Party
 - Final Present and individual screen split support for Surprise Party
 - Autostart for Any%, 100%, and Surprise Party
 

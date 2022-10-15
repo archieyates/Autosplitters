@@ -1,10 +1,10 @@
 // Squirm Autosplitter
-// version 4.0
+// version 4.1
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported Categories
-//	- Any%
-//  - 100%
-//  - Surprise Party
+//	- Any% (RTA & IGT)
+//  - 100% (RTA & IGT)
+//  - Surprise Party (RTA only)
 // IMPORTANT
 //  - Only confirmed to be supported in version 3.x
 //  - Developed using asl-help (https://github.com/just-ero/asl-help/blob/main/lib/asl-help)
@@ -106,6 +106,9 @@ init
         // Cutscene used for interacting with objects
         vars.Helper["Cutscene"] = mono.Make<bool>("Game", "inCutscene");
 
+        // Used to grab the accurate in-game time
+        vars.Helper["IGT"] = mono.Make<float>("Game", "timePlayed");
+
 		return true;
 	});
 }
@@ -117,12 +120,12 @@ start
     {
         if(old.Level != current.Level && current.Level == 0)
         {
-            return true; 
+           return true; 
         }
     }
 
     // Start when selecting the present
-    if(settings["party"])
+    if(settings["party"] && timer.CurrentTimingMethod == TimingMethod.RealTime)
     {
      if(current.Cutscene && old.Cutscene != current.Cutscene && current.Level == 16)
      {
@@ -142,7 +145,6 @@ onStart
         {
             if(settings[split.Key])
             {
-                //print("[Squirm Autosplitter] Added Split: " + split.Key);
                 vars.Splits.Add(split.Key);
             }
         }
@@ -151,7 +153,6 @@ onStart
         {
             if(settings[split.Key])
             {
-                //print("[Squirm Autosplitter] Added Split: " + split.Key);
                 vars.Splits.Add(split.Key);
             }
         }
@@ -162,6 +163,12 @@ onStart
     {
         vars.FurthestPartyLevel = 179;
     }
+}
+
+gameTime
+{
+    // When running Game Time use the game's recorded settings
+    return TimeSpan.FromSeconds(current.IGT);
 }
 
 split
@@ -251,4 +258,16 @@ split
     }
 
     return false;
+}
+
+isLoading
+{
+    // Failsafe to make sure that Real Time is enforced for Surprise Party
+    if(settings["party"])
+    {
+        return false;
+    }
+
+    // Since we read from the game time directly we always want to pause the LiveSplit timer
+    return true;
 }
