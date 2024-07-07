@@ -1,10 +1,11 @@
 // Squirm Autosplitter
-// version 4.1
+// version 4.2
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported Categories
 //	- Any% (RTA & IGT)
 //  - 100% (RTA & IGT)
 //  - Surprise Party (RTA only)
+//  - DLC (RTA only & no start supported)
 // IMPORTANT
 //  - Only confirmed to be supported in version 3.x
 //  - Developed using asl-help (https://github.com/just-ero/asl-help/blob/main/lib/asl-help)
@@ -18,6 +19,7 @@ startup
     // Without this nothing will work
     Assembly.Load(File.ReadAllBytes("Components/asl-help")).CreateInstance("Unity");
     vars.Helper.GameName = "Squirm";
+	vars.Helper.LoadSceneManager = true;
 
     // We use a cached list of splits based on user settings and then only check against ones we haven't reached
     vars.Splits = new List<string>();
@@ -87,6 +89,25 @@ startup
         settings.Add(ID, false, display, "party");
         settings.SetToolTip(ID, "Split when finishing the screen for level " + i);
     }
+
+    // DLC
+    settings.Add("dlc", false, "DLC");
+	settings.SetToolTip("dlc", "DLC mode with support for key points");
+    
+    // None of the DLC splits are things we can directly track in memory
+    vars.DLCSplitVariables = new Dictionary<string, Tuple<string, string, bool>> 
+	{
+        {"nexus",Tuple.Create("Reach Nexus", "dlc", true)},
+        {"rainbowSun",Tuple.Create("Reach Rainbow Sun", "dlc", false)},
+        {"trueNexus",Tuple.Create("Reach True Nexus", "dlc", true)},
+        {"trueNexusBoss",Tuple.Create("Reach God of Light", "dlc", true)},
+        {"dlcStar",Tuple.Create("Nexus Star", "dlc", true)}
+    };
+
+    foreach (var sv in vars.DLCSplitVariables)
+    {
+        settings.Add(sv.Key, sv.Value.Item3, sv.Value.Item1, sv.Value.Item2);
+    };
 }
 
 init 
@@ -111,6 +132,30 @@ init
 
 		return true;
 	});
+}
+
+update
+{
+    if(settings["dlc"])
+    {
+        current.activeScene = vars.Helper.Scenes.Active.Name == null ? current.activeScene : vars.Helper.Scenes.Active.Name;
+    }
+
+    // Debugging
+    // if(current.Level != old.Level)
+    // {
+    //     print("[Squirm Autosplitter] New Level: "+current.Level);
+    // }
+
+    // if(old.Cutscene != current.Cutscene)
+    // {
+    //     print("[Squirm Autosplitter] Cutscene: "+current.Cutscene);
+    // }
+
+	// if(current.activeScene != old.activeScene) 
+    // {
+    //     print("[Squirm Autosplitter] Scene change Old: \"" + old.activeScene + "\", Current: \"" + current.activeScene + "\"");
+    // }
 }
 
 start
@@ -162,6 +207,17 @@ onStart
     if(settings["party"])
     {
         vars.FurthestPartyLevel = 179;
+    }
+
+    if(settings["dlc"])
+    {
+        foreach (var split in vars.DLCSplitVariables)
+        {
+            if(settings[split.Key])
+            {
+                vars.Splits.Add(split.Key);
+            }
+        }
     }
 }
 
@@ -257,13 +313,73 @@ split
 
     }
 
+    if(settings["dlc"])
+    {
+        int index = 0;
+        bool splitThisFrame = false;
+
+        // Go through all the currently cached splits. If we meet the criteria for that split then remove it from the
+        // list and trigger the split
+        foreach (string split in vars.Splits)
+        {
+            switch(split) 
+            {
+            case "nexus":
+            if(current.activeScene != old.activeScene && current.activeScene == "Rainbow Nexus 0")
+            {
+                splitThisFrame = true;
+            }
+                break;
+            case "rainbowSun":
+                if(current.activeScene != old.activeScene && current.activeScene == "Rainbow Nexus BOSS")
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            case "trueNexus":
+                if(current.activeScene != old.activeScene && current.activeScene == "Nexus Core 0")
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            case "trueNexusBoss":
+                if(current.activeScene != old.activeScene && current.activeScene == "Rainbow Nexus ACTUAL BOSS")
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            case "dlcStar":
+                if(current.Cutscene && old.Cutscene != current.Cutscene && current.activeScene == "Rainbow Nexus END")
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            }
+
+            if(splitThisFrame)
+            {
+                break;
+            }
+
+            index++;
+        }
+
+        // Once we've split for an event remove it from the list of splits we care about
+        if(splitThisFrame)
+        {
+            vars.Splits.RemoveAt(index);
+        }
+
+        return splitThisFrame;
+    }
+
     return false;
 }
 
 isLoading
 {
-    // Failsafe to make sure that Real Time is enforced for Surprise Party
-    if(settings["party"])
+    // Failsafe to make sure that Real Time is enforced for Surprise Party and DLC
+    if(settings["party"] || settings["dlc"])
     {
         return false;
     }

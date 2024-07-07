@@ -21,6 +21,12 @@
 - Autostart
 - Split on interacting with present (end of run)
 - Split for each individual level of the party levels
+### DLC
+- RTA Timing
+- No autostart
+- Split on End Star
+- Split on Reaching each significant area
+- Split on reaching each boss
 
 ## Supported Versions
 - 3.0
