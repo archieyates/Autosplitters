@@ -1,5 +1,5 @@
 // Squirm Autosplitter
-// version 4.2
+// version 4.3
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported Categories
 //	- Any% (RTA & IGT)
@@ -62,6 +62,11 @@ startup
     // Any% and 100% splits that we can't directly track in memory
     vars.UntrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>> 
 	{
+        {"reachedSkelord",Tuple.Create("Reached Skelord", "any", false)},
+        {"reachedFatty",Tuple.Create("Reached Fatty", "any", false)},
+        {"reachedBlocka",Tuple.Create("Reached Blocka", "any", false)},
+        {"reachedJetpack",Tuple.Create("Reached Tower Jetpack", "any", false)},
+        {"reachedCotton",Tuple.Create("Reached Cotton", "any", false)},
         {"inverseWorld",Tuple.Create("Reached Crackers", "any", true)},
         {"float",Tuple.Create("Fade out after Float Kill", "any", true)},
         {"heart",Tuple.Create("Talk to Heart", "100", false)},
@@ -241,6 +246,36 @@ split
         {
             switch(split) 
             {
+            case "reachedSkelord":
+                if(old.Level == 34 && current.Level == 35)
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            case "reachedFatty":
+                if(old.Level == 53 && current.Level == 57)
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            case "reachedBlocka":
+                if(old.Level == 75 && current.Level == 76)
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            case "reachedJetpack":
+                if(old.Level == 88 && current.Level == 92)
+                {
+                    splitThisFrame = true;
+                }
+                break;
+            case "reachedCotton":
+                if(old.Level == 113 && current.Level == 114)
+                {
+                    splitThisFrame = true;
+                }
+                break;
             case "inverseWorld":
                 if(old.Level == 159 && current.Level == 160)
                 {

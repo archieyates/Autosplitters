@@ -8,6 +8,8 @@
 - Autostart
 - All Keys
 - Ludo, Skelord, and Fatty Kill
+- Reaching Skelord, Fatty, Blocka and Cotton
+- Reaching the Jetpack section in Tower
 - Reaching Crackers in Inverse World
 - Fading out after beating Float (end of run)
 ### 100%
