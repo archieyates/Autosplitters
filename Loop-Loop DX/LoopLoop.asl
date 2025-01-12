@@ -14,6 +14,7 @@ startup
     // Without this nothing will work
     Assembly.Load(File.ReadAllBytes("Components/asl-help")).CreateInstance("Unity");
     vars.Helper.GameName = "Loop-Loop DX";
+    vars.Helper.LoadSceneManager = true;
 
     // We use a cached list of splits based on user settings and then only check against ones we haven't reached
     vars.Splits = new List<string>();
@@ -31,6 +32,10 @@ startup
         {"beatPurple",Tuple.Create("Beat Purple Zone", "adventure", true)},
         {"beatWhite",Tuple.Create("Beat White Zone", "adventure", true)},
         {"beatFinalBoss",Tuple.Create("Defeated Warden", "adventure", true)},
+        {"atWardenLevel",Tuple.Create("Defeated Warden", "adventure", true)},
+        {"atFinalBossFinalForm",Tuple.Create("Defeated Warden", "adventure", true)},
+        {"hitByFinalBoss",Tuple.Create("Defeated Warden", "adventure", true)},
+        {"sawGoodEnding",Tuple.Create("Defeated Warden", "adventure", true)},
     };
 
     foreach (var sv in vars.TrackedSplitVariables)
@@ -41,11 +46,23 @@ startup
 
 init 
 {
+    // TODO: Get Game Manager from Game for lots more stuff
+    // GameManager->level
+    // GameManager->themeNum
+    // GameManager->levelToLoadOnDie
+    // GameManager->GameMode
+
+
     // Search the game for the memory addresses
     vars.Helper.TryLoad = (Func<dynamic, bool>)(mono =>
 	{
         // Tracking game complete
         vars.Helper["BeatGame"] = mono.Make<bool>("Game", "beatGame");
+
+
+        vars.Helper["level"] = mono.Make<int>("Game", "manager", "level");
+        //vars.Helper["themeNum"] = mono.Make<int>("Game", "themeNum");
+        //vars.Helper["levelToLoadOnDie"] = mono.Make<int>("Game", "levelToLoadOnDie");
 
         // All the main game variables
         foreach (var sv in vars.TrackedSplitVariables)
@@ -65,5 +82,25 @@ update
          {
             print("[Loop Loop] Variable " + sv.Key + " changed to " + vars.Helper[sv.Key].Current);
          }
+    }
+
+    if(current.level != old.level)
+    {
+         print("[Loop Loop] New Level: "+current.Level);
+    }
+    // if(current.themeNum != old.themeNum)
+    // {
+    //      print("[Loop Loop] New Theme: "+current.themeNum);
+    // }
+    // if(current.levelToLoadOnDie != old.levelToLoadOnDie)
+    // {
+    //      print("[Loop Loop] New Level to Load on Die: "+current.levelToLoadOnDie);
+    // }
+
+    current.activeScene = vars.Helper.Scenes.Active.Name == null ? current.activeScene : vars.Helper.Scenes.Active.Name;
+
+    if(current.activeScene != old.activeScene) 
+    {
+        print("[Loop Loop] Scene change Old: \"" + old.activeScene + "\", Current: \"" + current.activeScene + "\"");
     }
 }
