@@ -1,5 +1,5 @@
 // Squirm Autosplitter
-// version 4.3
+// version 4.4
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported Categories
 //	- Any% (RTA & IGT)
@@ -34,47 +34,49 @@ startup
     settings.Add("100", false, "100%", "main");
 	settings.SetToolTip("100", "These variables will only be needed for 100% speedruns");
 
-    // Any% and 100% splits that we can directly look up in memory
-    vars.TrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>> 
-	{
-        {"beatLudo",Tuple.Create("Kill Ludo", "any", false)},
-        {"hasLudoKey",Tuple.Create("Ludo Key", "any", true)},
-        {"beatSkele",Tuple.Create("Kill Skelord", "any", true)},
-        {"hasSkeleKey",Tuple.Create("Skelord Key", "any", false)},
-        {"beatFatty",Tuple.Create("Beat Fatty", "any", false)},
-        {"hasFattyKey",Tuple.Create("Fatty Key", "any", true)},
-        {"mouseKey",Tuple.Create("Castle Key", "any", true)},
-        {"towerKey",Tuple.Create("Tower Key", "any", true)},
-        {"cloudKey",Tuple.Create("Cotton Key", "any", true)},
-        {"workStar",Tuple.Create("Hub Star", "100", false)},
-        {"spookStar",Tuple.Create("Spook Star", "100", false)},
-        {"iceStar",Tuple.Create("Ice Star", "100", false)},
-        {"castleStar",Tuple.Create("Castle Star", "100", false)},
-        {"towerStar",Tuple.Create("Tower Star", "100", false)},
-        {"spaceStar",Tuple.Create("Space Star", "100", false)},
-    };
-
-    foreach (var sv in vars.TrackedSplitVariables)
+    // All any% and 100% variables in settings order (tracked, setting, category, default value)
+    var sharedVariables = new Dictionary<string, Tuple<bool, string, string, bool>>
     {
-        settings.Add(sv.Key, sv.Value.Item3, sv.Value.Item1, sv.Value.Item2);
+        {"beatLudo",Tuple.Create(true, "Kill Ludo", "any", false)},
+        {"hasLudoKey",Tuple.Create(true, "Ludo Key", "any", true)},
+        {"reachedSkelord",Tuple.Create(false, "Reached Skelord", "any", false)},
+        {"beatSkele",Tuple.Create(true, "Kill Skelord", "any", true)},
+        {"hasSkeleKey",Tuple.Create(true, "Skelord Key", "any", false)},
+        {"reachedFatty",Tuple.Create(false, "Reached Fatty", "any", false)},
+        {"beatFatty",Tuple.Create(true, "Beat Fatty", "any", false)},
+        {"hasFattyKey",Tuple.Create(true, "Fatty Key", "any", true)},
+        {"reachedBlocka",Tuple.Create(false, "Reached Blocka", "any", false)},
+        {"mouseKey",Tuple.Create(true, "Castle Key", "any", true)},
+        {"reachedJetpack",Tuple.Create(false, "Reached Tower Jetpack", "any", false)},
+        {"towerKey",Tuple.Create(true, "Tower Key", "any", true)},
+        {"reachedCotton",Tuple.Create(false, "Reached Cotton", "any", false)},
+        {"cloudKey",Tuple.Create(true, "Cotton Key", "any", true)},
+        {"inverseWorld",Tuple.Create(false, "Reached Float", "any", true)},
+        {"float",Tuple.Create(false, "Fade out after Float Kill", "any", true)},
+        {"workStar",Tuple.Create(true, "Hub Star", "100", false)},
+        {"spookStar",Tuple.Create(true, "Spook Star", "100", false)},
+        {"iceStar",Tuple.Create(true, "Ice Star", "100", false)},
+        {"castleStar",Tuple.Create(true, "Castle Star", "100", false)},
+        {"towerStar",Tuple.Create(true, "Tower Star", "100", false)},
+        {"spaceStar",Tuple.Create(true, "Space Star", "100", false)},
+        {"heart",Tuple.Create(false, "Talk to Heart", "100", false)},
     };
 
-    // Any% and 100% splits that we can't directly track in memory
-    vars.UntrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>> 
-	{
-        {"reachedSkelord",Tuple.Create("Reached Skelord", "any", false)},
-        {"reachedFatty",Tuple.Create("Reached Fatty", "any", false)},
-        {"reachedBlocka",Tuple.Create("Reached Blocka", "any", false)},
-        {"reachedJetpack",Tuple.Create("Reached Tower Jetpack", "any", false)},
-        {"reachedCotton",Tuple.Create("Reached Cotton", "any", false)},
-        {"inverseWorld",Tuple.Create("Reached Crackers", "any", true)},
-        {"float",Tuple.Create("Fade out after Float Kill", "any", true)},
-        {"heart",Tuple.Create("Talk to Heart", "100", false)},
-    };
-
-    foreach (var sv in vars.UntrackedSplitVariables)
+    // Go through settings and cached tracked and untracked variables separately
+    vars.TrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>>{};
+    vars.UntrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>>{};
+    foreach (var sv in sharedVariables)
     {
-        settings.Add(sv.Key, sv.Value.Item3, sv.Value.Item1, sv.Value.Item2);
+        settings.Add(sv.Key, sv.Value.Item4, sv.Value.Item2, sv.Value.Item3);
+
+        if(sv.Value.Item1 == true)
+        {
+            vars.TrackedSplitVariables.Add(sv.Key, Tuple.Create(sv.Value.Item2, sv.Value.Item3, sv.Value.Item4));     
+        }
+        else
+        {
+            vars.UntrackedSplitVariables.Add(sv.Key, Tuple.Create(sv.Value.Item2, sv.Value.Item3, sv.Value.Item4));
+        }
     };
 
     // Party
@@ -135,6 +137,9 @@ init
         // Used to grab the accurate in-game time
         vars.Helper["IGT"] = mono.Make<float>("Game", "timePlayed");
 
+        // Check if we've started
+        vars.Helper["Started"] = mono.Make<bool>("Game", "started");
+
 		return true;
 	});
 }
@@ -168,7 +173,7 @@ start
     // Start when new game is started
     if(settings["main"])
     {
-        if(old.Level != current.Level && current.Level == 0)
+        if(vars.Helper["Started"].Current && vars.Helper["Started"].Old != vars.Helper["Started"].Current)
         {
            return true; 
         }
