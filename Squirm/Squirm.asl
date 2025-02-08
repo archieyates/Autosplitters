@@ -1,11 +1,11 @@
 // Squirm Autosplitter
-// version 4.4
+// version 4.5
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported Categories
 //	- Any% (RTA & IGT)
 //  - 100% (RTA & IGT)
-//  - Surprise Party (RTA only)
-//  - DLC (RTA only & no start supported)
+//  - Surprise Party (RTA only) [Start Support]
+//  - DLC (RTA only)
 // IMPORTANT
 //  - Only confirmed to be supported in version 3.x
 //  - Developed using asl-help (https://github.com/just-ero/asl-help/blob/main/lib/asl-help)
@@ -137,9 +137,6 @@ init
         // Used to grab the accurate in-game time
         vars.Helper["IGT"] = mono.Make<float>("Game", "timePlayed");
 
-        // Check if we've started
-        vars.Helper["Started"] = mono.Make<bool>("Game", "started");
-
 		return true;
 	});
 }
@@ -170,16 +167,7 @@ update
 
 start
 {
-    // Start when new game is started
-    if(settings["main"])
-    {
-        if(vars.Helper["Started"].Current && vars.Helper["Started"].Old != vars.Helper["Started"].Current)
-        {
-           return true; 
-        }
-    }
-
-    // Start when selecting the present
+    // Start when selecting the present (Surprise Party Only!)
     if(settings["party"] && timer.CurrentTimingMethod == TimingMethod.RealTime)
     {
      if(current.Cutscene && old.Cutscene != current.Cutscene && current.Level == 16)
