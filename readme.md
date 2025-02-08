@@ -20,7 +20,7 @@ Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.c
 - RTA timing for DLC
 - Final Present and individual screen split support for Surprise Party
 - Final Star, key area, and boss splits for DLC
-- Autostart for Any%, 100%, and Surprise Party
+- Autostart for Surprise Party
 
 ### Supported Versions
 - 3.0
