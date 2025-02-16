@@ -6,7 +6,7 @@
 ### Any%
 - Game Time timing
 - All Keys
-- Ludo, Skelord, Fatty, and Sun Kill
+- Ludo, Skelord, Fatty, Blocka, and Sun Kill
 - Reaching Skelord, Fatty, Blocka and Cotton
 - Collecting the Gun and Double Jump Powerups (for the first time)
 - Activating each of the levers in the Castle

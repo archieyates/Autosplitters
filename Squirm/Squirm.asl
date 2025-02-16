@@ -51,6 +51,7 @@ startup
         {"lever3",Tuple.Create(true, "Right Lever", "any", false)},
         {"lever2",Tuple.Create(true, "Upper Lever", "any", false)},
         {"reachedBlocka",Tuple.Create(false, "Reached Blocka", "any", false)},
+        {"beatBlocka",Tuple.Create(true, "Defeated Blocka", "any", false)},
         {"mouseKey",Tuple.Create(true, "Castle Key", "any", true)},
         {"reachedJetpack",Tuple.Create(false, "Reached Tower Jetpack", "any", false)},
         {"towerKey",Tuple.Create(true, "Tower Key", "any", true)},
