@@ -1,5 +1,5 @@
 // Squirm Autosplitter
-// version 4.5
+// version 4.6
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported Categories
 //	- Any% (RTA & IGT)
@@ -37,20 +37,27 @@ startup
     // All any% and 100% variables in settings order (tracked, setting, category, default value)
     var sharedVariables = new Dictionary<string, Tuple<bool, string, string, bool>>
     {
+        {"hasGun",Tuple.Create(true, "Gun", "any", false)},
         {"beatLudo",Tuple.Create(true, "Kill Ludo", "any", false)},
         {"hasLudoKey",Tuple.Create(true, "Ludo Key", "any", true)},
+        {"hasDubJump",Tuple.Create(true, "Double Jump", "any", false)},
         {"reachedSkelord",Tuple.Create(false, "Reached Skelord", "any", false)},
         {"beatSkele",Tuple.Create(true, "Kill Skelord", "any", true)},
         {"hasSkeleKey",Tuple.Create(true, "Skelord Key", "any", false)},
         {"reachedFatty",Tuple.Create(false, "Reached Fatty", "any", false)},
         {"beatFatty",Tuple.Create(true, "Beat Fatty", "any", false)},
         {"hasFattyKey",Tuple.Create(true, "Fatty Key", "any", true)},
+        {"lever1",Tuple.Create(true, "Left Lever", "any", false)},
+        {"lever3",Tuple.Create(true, "Right Lever", "any", false)},
+        {"lever2",Tuple.Create(true, "Upper Lever", "any", false)},
         {"reachedBlocka",Tuple.Create(false, "Reached Blocka", "any", false)},
         {"mouseKey",Tuple.Create(true, "Castle Key", "any", true)},
         {"reachedJetpack",Tuple.Create(false, "Reached Tower Jetpack", "any", false)},
         {"towerKey",Tuple.Create(true, "Tower Key", "any", true)},
+        {"killedSun",Tuple.Create(true, "Killed Sun", "any", false)},
         {"reachedCotton",Tuple.Create(false, "Reached Cotton", "any", false)},
         {"cloudKey",Tuple.Create(true, "Cotton Key", "any", true)},
+        {"openedChest",Tuple.Create(true, "Inverse World Chest", "any", false)},
         {"inverseWorld",Tuple.Create(false, "Reached Float", "any", true)},
         {"float",Tuple.Create(false, "Fade out after Float Kill", "any", true)},
         {"workStar",Tuple.Create(true, "Hub Star", "100", false)},

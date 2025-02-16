@@ -6,9 +6,12 @@
 ### Any%
 - Game Time timing
 - All Keys
-- Ludo, Skelord, and Fatty Kill
+- Ludo, Skelord, Fatty, and Sun Kill
 - Reaching Skelord, Fatty, Blocka and Cotton
+- Collecting the Gun and Double Jump Powerups (for the first time)
+- Activating each of the levers in the Castle
 - Reaching the Jetpack section in Tower
+- Opening the chest in the Inverse World
 - Reaching Crackers in Inverse World
 - Fading out after beating Float (end of run)
 ### 100%
