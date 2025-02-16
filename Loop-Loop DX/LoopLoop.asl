@@ -1,7 +1,8 @@
 // Loop-Loop DX Autosplitter
-// version 0.1
+// version 1.0
 // Author: Reicha7 (www.archieyates.co.uk)
 // Supported Categories
+// - Adventure Mode
 // IMPORTANT
 //  - Developed using asl-help (https://github.com/just-ero/asl-help/blob/main/lib/asl-help)
 
@@ -14,7 +15,6 @@ startup
     // Without this nothing will work
     Assembly.Load(File.ReadAllBytes("Components/asl-help")).CreateInstance("Unity");
     vars.Helper.GameName = "Loop-Loop DX";
-    //vars.Helper.LoadSceneManager = true;
 
     // We use a cached list of splits based on user settings and then only check against ones we haven't reached
     vars.Splits = new List<string>();
@@ -22,7 +22,7 @@ startup
     settings.Add("adventure", true, "Adventure");
 	settings.SetToolTip("adventure", "Variables for Adventure Mode");
 
-    // Any% and 100% splits that we can directly look up in memory
+    // Splits that we can directly look up in memory
     vars.TrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>> 
 	{
         {"beatFirstLevel",Tuple.Create("Beat Red Zone", "adventure", true)},
@@ -30,13 +30,8 @@ startup
         {"beatGreen",Tuple.Create("Beat Green Zone", "adventure", true)},
         {"beatBlue",Tuple.Create("Beat Blue Zone", "adventure", true)},
         {"beatPurple",Tuple.Create("Beat Purple Zone", "adventure", true)},
-        {"beatWhite",Tuple.Create("Beat White Zone", "adventure", true)},
+        {"beatWhite",Tuple.Create("Beat White Zone", "adventure", true)},,
         {"beatFinalBoss",Tuple.Create("Defeated Warden", "adventure", true)},
-        {"atWardenLevel",Tuple.Create("At Warden", "adventure", true)},
-        {"beatGame",Tuple.Create("Beat Game", "adventure", true)},
-        {"atFinalBossFinalForm",Tuple.Create("Warden Final Form", "adventure", true)},
-        {"hitByFinalBoss",Tuple.Create("Hit By Final Boss", "adventure", true)},
-        {"sawGoodEnding",Tuple.Create("Saw Good Ending", "adventure", true)},
     };
 
     foreach (var sv in vars.TrackedSplitVariables)
@@ -47,24 +42,9 @@ startup
 
 init 
 {
-    // TODO: Get Game Manager from Game for lots more stuff
-    // GameManager->level
-    // GameManager->themeNum
-    // GameManager->levelToLoadOnDie
-    // GameManager->GameMode
-
-
     // Search the game for the memory addresses
     vars.Helper.TryLoad = (Func<dynamic, bool>)(mono =>
 	{
-        // Tracking game complete
-        //vars.Helper["BeatGame"] = mono.Make<bool>("Game", "beatGame");
-
-
-        //vars.Helper["level"] = mono.Make<int>("Game", "manager", "level");
-        //vars.Helper["themeNum"] = mono.Make<int>("Game", "themeNum");
-        //vars.Helper["levelToLoadOnDie"] = mono.Make<int>("Game", "levelToLoadOnDie");
-
         // All the main game variables
         foreach (var sv in vars.TrackedSplitVariables)
         {
@@ -77,31 +57,52 @@ init
 update
 {
     // Just for tracking
-    foreach (var sv in vars.TrackedSplitVariables)
+    // foreach (var sv in vars.TrackedSplitVariables)
+    // {
+    //      if(vars.Helper[sv.Key].Old != vars.Helper[sv.Key].Current)
+    //      {
+    //         print("[Loop Loop] Variable " + sv.Key + " changed to " + vars.Helper[sv.Key].Current);
+    //      }
+    // }
+}
+
+onStart
+{
+    // Go through all selected split settings and cache them
+    vars.Splits.Clear();
+    
+    foreach (var split in vars.TrackedSplitVariables)
     {
-         if(vars.Helper[sv.Key].Old != vars.Helper[sv.Key].Current)
-         {
-            print("[Loop Loop] Variable " + sv.Key + " changed to " + vars.Helper[sv.Key].Current);
-         }
+        if(settings[split.Key])
+        {
+            vars.Splits.Add(split.Key);
+        }
+    }
+}
+
+split
+{   
+    int index = 0;
+    bool splitThisFrame = false;
+
+    // Go through all the currently cached splits
+    // If we meet the criteria for that split then remove it from the list and trigger the split
+    foreach (string split in vars.Splits)
+    {
+        if(vars.Helper[split].Current && vars.Helper[split].Old != vars.Helper[split].Current)
+        {
+            splitThisFrame = true;
+            break;
+        }
+
+        index++;
     }
 
-    // if(current.level != old.level)
-    // {
-    //      print("[Loop Loop] New Level: "+current.Level);
-    // }
-    // if(current.themeNum != old.themeNum)
-    // {
-    //      print("[Loop Loop] New Theme: "+current.themeNum);
-    // }
-    // if(current.levelToLoadOnDie != old.levelToLoadOnDie)
-    // {
-    //      print("[Loop Loop] New Level to Load on Die: "+current.levelToLoadOnDie);
-    // }
+    // Once we've split for an event remove it from the list of splits we care about
+    if(splitThisFrame)
+    {
+        vars.Splits.RemoveAt(index);
+    }
 
-    // current.activeScene = vars.Helper.Scenes.Active.Name == null ? current.activeScene : vars.Helper.Scenes.Active.Name;
-
-    // if(current.activeScene != old.activeScene) 
-    // {
-    //     print("[Loop Loop] Scene change Old: \"" + old.activeScene + "\", Current: \"" + current.activeScene + "\"");
-    // }
+    return splitThisFrame;
 }
