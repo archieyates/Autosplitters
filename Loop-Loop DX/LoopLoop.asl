@@ -30,7 +30,7 @@ startup
         {"beatGreen",Tuple.Create("Beat Green Zone", "adventure", true)},
         {"beatBlue",Tuple.Create("Beat Blue Zone", "adventure", true)},
         {"beatPurple",Tuple.Create("Beat Purple Zone", "adventure", true)},
-        {"beatWhite",Tuple.Create("Beat White Zone", "adventure", true)},,
+        {"beatWhite",Tuple.Create("Beat White Zone", "adventure", true)},
         {"beatFinalBoss",Tuple.Create("Defeated Warden", "adventure", true)},
     };
 
