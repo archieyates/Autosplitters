@@ -1,27 +1,7 @@
 # Autosplitters
-Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for [Valkyria Chronicles](https://www.speedrun.com/vc) and [Squirm](https://www.speedrun.com/squirm).
+Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts I've developed for the following games:
 
-## Valkyria Chronicles
-### Features
-- Split on "Operation Complete"
-- Split on final hit on Maximillian
-- Load Remover
-
-### Supported Versions
-- Steam
-- Windows Store
-
-## Squirm
-### Features
-- Game Time timing for Any% and 100%
-- Any% standard splits support
-- 100% standard splits support
-- RTA timing for Surprise Party
-- RTA timing for DLC
-- Final Present and individual screen split support for Surprise Party
-- Final Star, key area, and boss splits for DLC
-- Autostart for Surprise Party
-
-### Supported Versions
-- 3.0
+- [Valkyria Chronicles](https://www.speedrun.com/vc)
+- [Squirm](https://www.speedrun.com/squirm)
+- [Loop-Loop DX](https://www.speedrun.com/loop_loop)
 
