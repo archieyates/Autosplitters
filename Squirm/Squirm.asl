@@ -1,14 +1,16 @@
 // Squirm Autosplitter
-// version 4.6
+// version 4.7.0
 // Author: Reicha7 (www.archieyates.co.uk)
+// Link: https://github.com/archieyates/Autosplitters/tree/master/Squirm
 // Supported Categories
-//	- Any% (RTA & IGT)
-//  - 100% (RTA & IGT)
-//  - Surprise Party (RTA only) [Start Support]
-//  - DLC (RTA only)
-// IMPORTANT
-//  - Only confirmed to be supported in version 3.x
+//	- Any% (RTA & IGT) [Start|Split]
+//  - 100% (RTA & IGT) [Start|Split]
+//  - Surprise Party (RTA only) [Start|Split]
+//  - DLC (RTA only) [Split]
+// Notes:
+//  - Only confirmed to be supported in Squirm version 3.x
 //  - Developed using asl-help (https://github.com/just-ero/asl-help/blob/main/lib/asl-help)
+//  - Credit to Medievil Autosplitter developers for inspiring some of the code layout for version 4.7 (https://github.com/SirDarcanos/MediEvil/tree/main/Auto-Splitters)
 
 state("Squirm") 
 {
@@ -16,410 +18,310 @@ state("Squirm")
 
 startup 
 {
-    // Without this nothing will work
-    Assembly.Load(File.ReadAllBytes("Components/asl-help")).CreateInstance("Unity");
-    vars.Helper.GameName = "Squirm";
-	vars.Helper.LoadSceneManager = true;
+  // Without this nothing will work
+  Assembly.Load(File.ReadAllBytes("Components/asl-help")).CreateInstance("Unity");
+  vars.Helper.GameName = "Squirm";
+  vars.Helper.LoadSceneManager = true;
+  
+  // Surprise party first and last levels
+  vars.surprisePartyStart = 179;
+  vars.surprisePartyEnd = 192;
+ 
+  // Any% and 100% share a lot of variables so grouping them up
+  settings.Add("main", true, "Any% and 100%");
+  settings.SetToolTip("main", "Any% and 100% share a lot of variables");
 
-    // We use a cached list of splits based on user settings and then only check against ones we haven't reached
-    vars.Splits = new List<string>();
+  settings.Add("any", true, "Shared", "main");
+  settings.SetToolTip("any", "These variables can be used in both Any% and 100% speedruns");
 
-    // Any% and 100% share a lot of variables so grouping them up
-    settings.Add("main", true, "Any% and 100%");
-	settings.SetToolTip("main", "Any% and 100% share a lot of variables");
+  settings.Add("100", false, "100%", "main");
+  settings.SetToolTip("100", "These variables will only be needed for 100% speedruns");
+  
+  settings.Add("party", false, "Surprise Party");
+  settings.SetToolTip("party", "Surprise Party Mode with support for each individual level");
+  
+  settings.Add("dlc", false, "DLC");
+  settings.SetToolTip("dlc", "DLC mode with support for key points");
 
-    settings.Add("any", true, "Shared", "main");
-	settings.SetToolTip("any", "These variables can be used in both Any% and 100% speedruns");
+  // All the settings for the autosplitter
+  vars.settingsData = new Dictionary<string, Tuple<string, string, bool>>
+  {
+    {"hasGun",Tuple.Create("Gun", "any", false)},
+    {"beatLudo",Tuple.Create("Kill Ludo", "any", false)},
+    {"hasLudoKey",Tuple.Create("Ludo Key", "any", true)},
+    {"hasDubJump",Tuple.Create("Double Jump", "any", false)},
+    {"reachedSkelord",Tuple.Create("Reached Skelord", "any", false)},
+    {"beatSkele",Tuple.Create("Kill Skelord", "any", true)},
+    {"hasSkeleKey",Tuple.Create("Skelord Key", "any", false)},
+    {"reachedFatty",Tuple.Create("Reached Fatty", "any", false)},
+    {"beatFatty",Tuple.Create("Beat Fatty", "any", false)},
+    {"hasFattyKey",Tuple.Create("Fatty Key", "any", true)},
+    {"lever1",Tuple.Create("Left Lever", "any", false)},
+    {"lever3",Tuple.Create("Right Lever", "any", false)},
+    {"lever2",Tuple.Create("Upper Lever", "any", false)},
+    {"reachedBlocka",Tuple.Create("Reached Blocka", "any", false)},
+    {"beatBlocka",Tuple.Create("Defeated Blocka", "any", false)},
+    {"mouseKey",Tuple.Create("Castle Key", "any", true)},
+    {"reachedJetpack",Tuple.Create("Reached Tower Jetpack", "any", false)},
+    {"towerKey",Tuple.Create("Tower Key", "any", true)},
+    {"killedSun",Tuple.Create("Killed Sun", "any", false)},
+    {"reachedCotton",Tuple.Create("Reached Cotton", "any", false)},
+    {"cloudKey",Tuple.Create("Cotton Key", "any", true)},
+    {"openedChest",Tuple.Create("Inverse World Chest", "any", false)},
+    {"inverseWorld",Tuple.Create("Reached Float", "any", true)},
+    {"float",Tuple.Create("Fade out after Float Kill", "any", true)},
+    {"workStar",Tuple.Create("Hub Star", "100", false)},
+    {"spookStar",Tuple.Create("Spook Star", "100", false)},
+    {"iceStar",Tuple.Create("Ice Star", "100", false)},
+    {"castleStar",Tuple.Create("Castle Star", "100", false)},
+    {"towerStar",Tuple.Create("Tower Star", "100", false)},
+    {"spaceStar",Tuple.Create("Space Star", "100", false)},
+    {"heart",Tuple.Create("Talk to Heart", "100", false)},
+    {"nexus",Tuple.Create("Reach Nexus", "dlc", true)},
+    {"rainbowSun",Tuple.Create("Reach Rainbow Sun", "dlc", false)},
+    {"trueNexus",Tuple.Create("Reach True Nexus", "dlc", true)},
+    {"trueNexusBoss",Tuple.Create("Reach God of Light", "dlc", true)},
+    {"dlcStar",Tuple.Create("Nexus Star", "dlc", true)},
+    {"present",Tuple.Create("Present", "party", true)}
+  };
+  
+  // Level IDs for each of the Surprise Party Levels
+  for (int i = vars.surprisePartyStart; i < vars.surprisePartyEnd; i++) 
+  {
+    string ID = "lv" + i;
+    string display = "Level " + i;
 
-    settings.Add("100", false, "100%", "main");
-	settings.SetToolTip("100", "These variables will only be needed for 100% speedruns");
+    vars.settingsData.Add(ID,Tuple.Create(display, "party", false));
+  }
 
-    // All any% and 100% variables in settings order (tracked, setting, category, default value)
-    var sharedVariables = new Dictionary<string, Tuple<bool, string, string, bool>>
-    {
-        {"hasGun",Tuple.Create(true, "Gun", "any", false)},
-        {"beatLudo",Tuple.Create(true, "Kill Ludo", "any", false)},
-        {"hasLudoKey",Tuple.Create(true, "Ludo Key", "any", true)},
-        {"hasDubJump",Tuple.Create(true, "Double Jump", "any", false)},
-        {"reachedSkelord",Tuple.Create(false, "Reached Skelord", "any", false)},
-        {"beatSkele",Tuple.Create(true, "Kill Skelord", "any", true)},
-        {"hasSkeleKey",Tuple.Create(true, "Skelord Key", "any", false)},
-        {"reachedFatty",Tuple.Create(false, "Reached Fatty", "any", false)},
-        {"beatFatty",Tuple.Create(true, "Beat Fatty", "any", false)},
-        {"hasFattyKey",Tuple.Create(true, "Fatty Key", "any", true)},
-        {"lever1",Tuple.Create(true, "Left Lever", "any", false)},
-        {"lever3",Tuple.Create(true, "Right Lever", "any", false)},
-        {"lever2",Tuple.Create(true, "Upper Lever", "any", false)},
-        {"reachedBlocka",Tuple.Create(false, "Reached Blocka", "any", false)},
-        {"beatBlocka",Tuple.Create(true, "Defeated Blocka", "any", false)},
-        {"mouseKey",Tuple.Create(true, "Castle Key", "any", true)},
-        {"reachedJetpack",Tuple.Create(false, "Reached Tower Jetpack", "any", false)},
-        {"towerKey",Tuple.Create(true, "Tower Key", "any", true)},
-        {"killedSun",Tuple.Create(true, "Killed Sun", "any", false)},
-        {"reachedCotton",Tuple.Create(false, "Reached Cotton", "any", false)},
-        {"cloudKey",Tuple.Create(true, "Cotton Key", "any", true)},
-        {"openedChest",Tuple.Create(true, "Inverse World Chest", "any", false)},
-        {"inverseWorld",Tuple.Create(false, "Reached Float", "any", true)},
-        {"float",Tuple.Create(false, "Fade out after Float Kill", "any", true)},
-        {"workStar",Tuple.Create(true, "Hub Star", "100", false)},
-        {"spookStar",Tuple.Create(true, "Spook Star", "100", false)},
-        {"iceStar",Tuple.Create(true, "Ice Star", "100", false)},
-        {"castleStar",Tuple.Create(true, "Castle Star", "100", false)},
-        {"towerStar",Tuple.Create(true, "Tower Star", "100", false)},
-        {"spaceStar",Tuple.Create(true, "Space Star", "100", false)},
-        {"heart",Tuple.Create(false, "Talk to Heart", "100", false)},
-    };
-
-    // Go through settings and cached tracked and untracked variables separately
-    vars.TrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>>{};
-    vars.UntrackedSplitVariables = new Dictionary<string, Tuple<string, string, bool>>{};
-    foreach (var sv in sharedVariables)
-    {
-        settings.Add(sv.Key, sv.Value.Item4, sv.Value.Item2, sv.Value.Item3);
-
-        if(sv.Value.Item1 == true)
-        {
-            vars.TrackedSplitVariables.Add(sv.Key, Tuple.Create(sv.Value.Item2, sv.Value.Item3, sv.Value.Item4));     
-        }
-        else
-        {
-            vars.UntrackedSplitVariables.Add(sv.Key, Tuple.Create(sv.Value.Item2, sv.Value.Item3, sv.Value.Item4));
-        }
-    };
-
-    // Party
-    settings.Add("party", false, "Surprise Party");
-	settings.SetToolTip("party", "Surprise Party Mode with support for each individual level");
-
-    // Interacting with the present
-    settings.Add("present", true, "Present", "party");
-	settings.SetToolTip("present", "Split when interacting with the present at the end of the party");
-
-    // Level IDs for each of the Surprise Party Levels
-    for (int i = 179; i < 192; i++) 
-    {
-        string ID = "lv" + i;
-        string display = "Level " + i;
-
-        settings.Add(ID, false, display, "party");
-        settings.SetToolTip(ID, "Split when finishing the screen for level " + i);
-    }
-
-    // DLC
-    settings.Add("dlc", false, "DLC");
-	settings.SetToolTip("dlc", "DLC mode with support for key points");
-    
-    // None of the DLC splits are things we can directly track in memory
-    vars.DLCSplitVariables = new Dictionary<string, Tuple<string, string, bool>> 
-	{
-        {"nexus",Tuple.Create("Reach Nexus", "dlc", true)},
-        {"rainbowSun",Tuple.Create("Reach Rainbow Sun", "dlc", false)},
-        {"trueNexus",Tuple.Create("Reach True Nexus", "dlc", true)},
-        {"trueNexusBoss",Tuple.Create("Reach God of Light", "dlc", true)},
-        {"dlcStar",Tuple.Create("Nexus Star", "dlc", true)}
-    };
-
-    foreach (var sv in vars.DLCSplitVariables)
-    {
-        settings.Add(sv.Key, sv.Value.Item3, sv.Value.Item1, sv.Value.Item2);
-    };
+  // Add all the settings data to the autosplitter settings
+  foreach (var sv in vars.settingsData)
+  {
+    settings.Add(sv.Key, sv.Value.Item3, sv.Value.Item1, sv.Value.Item2);
+  };
+  
+  settings.Add("debug", false, "Debug");
+  settings.SetToolTip("debug", "Enable debug messages that be read with Windows DebugView");
 }
 
 init 
 {
-    // Search the game for the memory addresses
-    vars.Helper.TryLoad = (Func<dynamic, bool>)(mono =>
+  // We use a cached list of splits based on user settings and then only check against ones we haven't reached
+  vars.splits = new List<string>();
+  vars.completedSplits = new HashSet<string>();
+  
+  // Scenes are the actual Unity Scenes which is a bit different from level Ids
+  vars.activeScene = "None";
+  vars.lastScene = "None";
+  
+  vars.checkScene = (Func<string, bool>)(scene =>
+  {
+    return vars.activeScene == scene && vars.lastScene != scene;
+  });
+  
+  // Check if a split has already been completed and that we're tracking it (more for safety than need)  
+  vars.checkSplit = (Func<string, bool>)(key => 
+  {
+    return ( vars.completedSplits.Add( key ) && settings[key] );
+  });
+  
+  // Search the game for the memory addresses
+  vars.Helper.TryLoad = (Func<dynamic, bool>)(mono =>
 	{
-        // Tracking level
-        vars.Helper["Level"] = mono.Make<int>("Game", "currentLevel");
+    // Tracking level
+    vars.Helper["Level"] = mono.Make<int>("Game", "currentLevel");
+    vars.Helper["Level"].Current = -1;
+    vars.Helper["Level"].Old = -1; 
+    
+    vars.checkLevel = (Func<int, bool>)(level =>
+    {
+      return vars.Helper["Level"].Current == level && vars.Helper["Level"].Old != level;
+    });
+    
+    // Tracking Game Settings
+    vars.Helper["hasGun"] = mono.Make<bool>("Game", "hasGun"); 
+    vars.Helper["beatLudo"] = mono.Make<bool>("Game", "beatLudo");
+    vars.Helper["hasLudoKey"] = mono.Make<bool>("Game", "hasLudoKey");
+    vars.Helper["hasDubJump"] = mono.Make<bool>("Game", "hasDubJump");
+    vars.Helper["beatSkele"] = mono.Make<bool>("Game", "beatSkele");
+    vars.Helper["hasSkeleKey"] = mono.Make<bool>("Game", "hasSkeleKey");
+    vars.Helper["beatFatty"] = mono.Make<bool>("Game", "beatFatty");
+    vars.Helper["hasFattyKey"] = mono.Make<bool>("Game", "hasFattyKey");
+    vars.Helper["lever1"] = mono.Make<bool>("Game", "lever1");
+    vars.Helper["lever2"] = mono.Make<bool>("Game", "lever2");
+    vars.Helper["lever3"] = mono.Make<bool>("Game", "lever3");
+    vars.Helper["beatBlocka"] = mono.Make<bool>("Game", "beatBlocka");
+    vars.Helper["mouseKey"] = mono.Make<bool>("Game", "mouseKey");
+    vars.Helper["towerKey"] = mono.Make<bool>("Game", "towerKey");
+    vars.Helper["killedSun"] = mono.Make<bool>("Game", "killedSun");
+    vars.Helper["cloudKey"] = mono.Make<bool>("Game", "cloudKey");
+    vars.Helper["openedChest"] = mono.Make<bool>("Game", "openedChest");
+    vars.Helper["workStar"] = mono.Make<bool>("Game", "workStar");
+    vars.Helper["spookStar"] = mono.Make<bool>("Game", "spookStar");
+    vars.Helper["iceStar"] = mono.Make<bool>("Game", "iceStar");
+    vars.Helper["castleStar"] = mono.Make<bool>("Game", "castleStar");
+    vars.Helper["towerStar"] = mono.Make<bool>("Game", "towerStar");
+    vars.Helper["spaceStar"] = mono.Make<bool>("Game", "spaceStar");
+    vars.Helper["Cutscene"] = mono.Make<bool>("Game", "inCutscene");
 
-        // All the main game variables
-        foreach (var sv in vars.TrackedSplitVariables)
-        {
-            vars.Helper[sv.Key] = mono.Make<bool>("Game", sv.Key);
-        }
+    vars.checkFlag = (Func<string, bool>)(key =>
+    {
+      return vars.Helper[key].Current == true && vars.Helper[key].Old == false;
+    });
 
-        // Cutscene used for interacting with objects
-        vars.Helper["Cutscene"] = mono.Make<bool>("Game", "inCutscene");
+    // Used to grab the accurate in-game time
+    vars.Helper["IGT"] = mono.Make<float>("Game", "timePlayed");
 
-        // Used to grab the accurate in-game time
-        vars.Helper["IGT"] = mono.Make<float>("Game", "timePlayed");
+    // All the unique split functions
+    // Note: Surprise Party levels are not included here as they are handled a little differently in split
+    vars.splitFuncs = new Dictionary<string, Func<bool>>
+    {
+      {"hasGun", new Func<bool>(() => vars.checkFlag("hasGun"))},
+      {"beatLudo", new Func<bool>(() => vars.checkFlag("beatLudo"))}, 
+      {"hasLudoKey", new Func<bool>(() => vars.checkFlag("hasLudoKey"))},
+      {"hasDubJump", new Func<bool>(() => vars.checkFlag("hasDubJump"))},
+      {"reachedSkelord", new Func<bool>(() => vars.checkLevel(35))},
+      {"beatSkele", new Func<bool>(() => vars.checkFlag("beatSkele"))},
+      {"hasSkeleKey", new Func<bool>(() => vars.checkFlag("hasSkeleKey"))},
+      {"reachedFatty", new Func<bool>(() => vars.checkLevel(57))},
+      {"beatFatty", new Func<bool>(() => vars.checkFlag("beatFatty"))},
+      {"hasFattyKey", new Func<bool>(() => vars.checkFlag("hasFattyKey"))},
+      {"lever1", new Func<bool>(() => vars.checkFlag("lever1"))},
+      {"lever3", new Func<bool>(() => vars.checkFlag("lever2"))},
+      {"lever2", new Func<bool>(() => vars.checkFlag("lever3"))},
+      {"reachedBlocka", new Func<bool>(() => vars.checkLevel(76))},
+      {"beatBlocka", new Func<bool>(() => vars.checkFlag("beatBlocka"))},
+      {"mouseKey", new Func<bool>(() => vars.checkFlag("mouseKey"))},
+      {"reachedJetpack", new Func<bool>(() => vars.checkLevel(92))},
+      {"towerKey", new Func<bool>(() => vars.checkFlag("towerKey"))},
+      {"killedSun", new Func<bool>(() => vars.checkFlag("killedSun"))},
+      {"reachedCotton", new Func<bool>(() => vars.checkLevel(114))},
+      {"cloudKey", new Func<bool>(() => vars.checkFlag("cloudKey"))},
+      {"openedChest", new Func<bool>(() => vars.checkFlag("openedChest"))},
+      {"inverseWorld", new Func<bool>(() => vars.checkLevel(160))},
+      {"float", new Func<bool>(() => vars.checkLevel(162))},
+      {"workStar", new Func<bool>(() => vars.checkFlag("workStar"))},
+      {"spookStar", new Func<bool>(() => vars.checkFlag("spookStar"))},
+      {"iceStar", new Func<bool>(() => vars.checkFlag("iceStar"))},
+      {"castleStar", new Func<bool>(() => vars.checkFlag("castleStar"))},
+      {"towerStar", new Func<bool>(() => vars.checkFlag("towerStar"))},
+      {"spaceStar", new Func<bool>(() => vars.checkFlag("spaceStar"))},
+      {"heart", new Func<bool>(() => vars.checkFlag("Cutscene") && vars.checkLevel(177))},
+      {"nexus", new Func<bool>(() => vars.activeScene == "Rainbow Nexus 0")},
+      {"rainbowSun", new Func<bool>(() => vars.activeScene == "Rainbow Nexus BOSS")},
+      {"trueNexus", new Func<bool>(() => vars.activeScene == "Nexus Core 0")},
+      {"trueNexusBoss", new Func<bool>(() => vars.activeScene == "Rainbow Nexus ACTUAL BOSS")},
+      {"dlcStar", new Func<bool>(() => vars.checkFlag("Cutscene") && vars.activeScene == "Rainbow Nexus END")} ,
+      {"present", new Func<bool>(() => vars.checkFlag("Cutscene") && vars.checkLevel(192))}  
+   };
 
-		return true;
+    return true;
 	});
 }
 
 update
 {
-    if(settings["dlc"])
+  vars.lastScene = vars.activeScene;
+  vars.activeScene = vars.Helper.Scenes.Active.Name == null ? vars.activeScene : vars.Helper.Scenes.Active.Name;
+
+  // Debugging
+  if(settings["debug"])
+  {
+    if(vars.Helper["Level"].Current != vars.Helper["Level"].Old)
     {
-        current.activeScene = vars.Helper.Scenes.Active.Name == null ? current.activeScene : vars.Helper.Scenes.Active.Name;
+      print("[Squirm Autosplitter] New Level: " + vars.Helper["Level"].Current + " Was: " + vars.Helper["Level"].Old);
     }
 
-    // Debugging
-    // if(current.Level != old.Level)
-    // {
-    //     print("[Squirm Autosplitter] New Level: "+current.Level);
-    // }
-
-    // if(old.Cutscene != current.Cutscene)
-    // {
-    //     print("[Squirm Autosplitter] Cutscene: "+current.Cutscene);
-    // }
-
-	// if(current.activeScene != old.activeScene) 
-    // {
-    //     print("[Squirm Autosplitter] Scene change Old: \"" + old.activeScene + "\", Current: \"" + current.activeScene + "\"");
-    // }
+    if(vars.activeScene != vars.lastScene) 
+    {
+      print("[Squirm Autosplitter] New Scene: " + vars.activeScene + " Was: " + vars.lastScene);
+    }
+  }
 }
 
 start
 {
-    // Start when selecting the present (Surprise Party Only!)
-    if(settings["party"] && timer.CurrentTimingMethod == TimingMethod.RealTime)
-    {
-     if(current.Cutscene && old.Cutscene != current.Cutscene && current.Level == 16)
-     {
-        return true;
-     }
+  // Start when selecting the present (Surprise Party Only)
+  if(settings["party"] && timer.CurrentTimingMethod == TimingMethod.RealTime) 
+  {
+   if(vars.Helper["Cutscene"].Current && vars.Helper["Cutscene"].Old != vars.Helper["Cutscene"].Current && vars.Helper["Level"].Current == 16)
+   { 
+      return true;
+   }
+  }
+  
+  // Start when the level and timer reset but also the previous level was valid (to prevent it triggering when booting the game)
+  if(settings["main"])
+  {
+    if(vars.Helper["Level"].Current == 0 && vars.Helper["Level"].Old != -1 && vars.Helper["IGT"].Current == 0)
+    { 
+      return true;
     }
+  }
 }
 
 onStart
 {
-    if(settings["main"])
+  // Go through all selected split settings and cache them
+  vars.splits.Clear();
+  vars.completedSplits.Clear();
+      
+  foreach (var func in vars.splitFuncs)
+  {
+    if(settings[func.Key])
     {
-        // Go through all selected split settings and cache them
-        vars.Splits.Clear();
-        
-        foreach (var split in vars.TrackedSplitVariables)
-        {
-            if(settings[split.Key])
-            {
-                vars.Splits.Add(split.Key);
-            }
-        }
-
-        foreach (var split in vars.UntrackedSplitVariables)
-        {
-            if(settings[split.Key])
-            {
-                vars.Splits.Add(split.Key);
-            }
-        }
+      vars.splits.Add(func.Key);
+      print("[Squirm Autosplitter] Added Split: " + func.Key);
     }
-
-    // 179 is first level of surprise party
-    if(settings["party"])
-    {
-        vars.FurthestPartyLevel = 179;
-    }
-
-    if(settings["dlc"])
-    {
-        foreach (var split in vars.DLCSplitVariables)
-        {
-            if(settings[split.Key])
-            {
-                vars.Splits.Add(split.Key);
-            }
-        }
-    }
+  }
 }
 
 gameTime
 {
-    // When running Game Time use the game's recorded settings
-    return TimeSpan.FromSeconds(current.IGT);
+  // When running Game Time use the game's recorded settings
+  return TimeSpan.FromSeconds(current.IGT);
 }
 
 split
-{   
-    // Any% and 100%
-    if(settings["main"])
+{
+  foreach (string split in vars.splits)
+  {
+    if( vars.splitFuncs[split]() && vars.checkSplit( split ) ) 
     {
-        int index = 0;
-        bool splitThisFrame = false;
-
-        // Go through all the currently cached splits. If we meet the criteria for that split then remove it from the
-        // list and trigger the split
-        foreach (string split in vars.Splits)
-        {
-            switch(split) 
-            {
-            case "reachedSkelord":
-                if(old.Level == 34 && current.Level == 35)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "reachedFatty":
-                if(old.Level == 53 && current.Level == 57)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "reachedBlocka":
-                if(old.Level == 75 && current.Level == 76)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "reachedJetpack":
-                if(old.Level == 88 && current.Level == 92)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "reachedCotton":
-                if(old.Level == 113 && current.Level == 114)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "inverseWorld":
-                if(old.Level == 159 && current.Level == 160)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "float":
-                if(old.Level == 161 && current.Level == 162)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "heart":
-                if(current.Cutscene && old.Cutscene != current.Cutscene && current.Level == 177)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            default:
-                // All other splits are just bools in the game memory
-                if(vars.Helper[split].Current && vars.Helper[split].Old != vars.Helper[split].Current)
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            }
-
-            if(splitThisFrame)
-            {
-                break;
-            }
-
-            index++;
-        }
-
-        // Once we've split for an event remove it from the list of splits we care about
-        if(splitThisFrame)
-        {
-            vars.Splits.RemoveAt(index);
-        }
-
-        return splitThisFrame;
+      if(settings["debug"])
+      {
+        print("[Squirm Autosplitter] Split: " + split);
+      }
+      
+      return true;
     }
+  }
 
-    // Surprise Party
-    if(settings["party"])
+  // Surprise Party levels it made more sense to handle with a loop
+  // than individual functions as it's all sequential level number checks
+  if(settings["party"])
+  {
+    for (int i = vars.surprisePartyStart; i < vars.surprisePartyEnd; i++) 
     {
-        if(settings["present"])
-        {
-            if(current.Cutscene && old.Cutscene != current.Cutscene && current.Level == 192)
-            {
-                return true;
-            }
-        }
-
-        // Check if we have gone beyond a level and split if we care about that level
-        for (int i = vars.FurthestPartyLevel; i < 192; i++) 
-        {
-            if(current.Level > vars.FurthestPartyLevel && current.Level != old.Level)
-            {
-                 string ID = "lv" + i;
-
-                vars.FurthestPartyLevel = current.Level;
-                if(settings[ID])
-                {   
-                    return true;
-                }
-            }
-        }
-
+      string split = "lv" + i;
+      if(vars.checkLevel(i+1) && vars.checkSplit( split ))
+      {
+        return true;
+      }
     }
+  }
 
-    if(settings["dlc"])
-    {
-        int index = 0;
-        bool splitThisFrame = false;
-
-        // Go through all the currently cached splits. If we meet the criteria for that split then remove it from the
-        // list and trigger the split
-        foreach (string split in vars.Splits)
-        {
-            switch(split) 
-            {
-            case "nexus":
-            if(current.activeScene != old.activeScene && current.activeScene == "Rainbow Nexus 0")
-            {
-                splitThisFrame = true;
-            }
-                break;
-            case "rainbowSun":
-                if(current.activeScene != old.activeScene && current.activeScene == "Rainbow Nexus BOSS")
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "trueNexus":
-                if(current.activeScene != old.activeScene && current.activeScene == "Nexus Core 0")
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "trueNexusBoss":
-                if(current.activeScene != old.activeScene && current.activeScene == "Rainbow Nexus ACTUAL BOSS")
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            case "dlcStar":
-                if(current.Cutscene && old.Cutscene != current.Cutscene && current.activeScene == "Rainbow Nexus END")
-                {
-                    splitThisFrame = true;
-                }
-                break;
-            }
-
-            if(splitThisFrame)
-            {
-                break;
-            }
-
-            index++;
-        }
-
-        // Once we've split for an event remove it from the list of splits we care about
-        if(splitThisFrame)
-        {
-            vars.Splits.RemoveAt(index);
-        }
-
-        return splitThisFrame;
-    }
-
-    return false;
+  return false;
 }
 
 isLoading
 {
-    // Failsafe to make sure that Real Time is enforced for Surprise Party and DLC
-    if(settings["party"] || settings["dlc"])
-    {
-        return false;
-    }
+  // Failsafe to make sure that Real Time is enforced for Surprise Party and DLC
+  if(settings["party"] || settings["dlc"])
+  {
+    return false;
+  }
 
-    // Since we read from the game time directly we always want to pause the LiveSplit timer
-    return true;
+  // Since we read from the game time directly we always want to pause the LiveSplit timer
+  return true;
 }

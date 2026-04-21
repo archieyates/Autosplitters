@@ -1,10 +1,11 @@
 # Squirm Autosplitter
 ## Supported Features
 - Split
-- Start (Surprise Party Only)
+- Start (Any%, 100%, and Surprise Party)
 ## Supported Categories
 ### Any%
 - Game Time timing
+- Autostart from selecting New Game (Requires Livesplit to be opened/reopened after any game relaunches)
 - All Keys
 - Ludo, Skelord, Fatty, Blocka, and Sun Kill
 - Reaching Skelord, Fatty, Blocka and Cotton
@@ -16,14 +17,15 @@
 - Fading out after beating Float (end of run)
 ### 100%
 - Game Time timing
+- Autostart from selecting New Game (Requires Livesplit to be opened/reopened after any game relaunches)
 - All splits from Any%
 - All Stars
 - Speaking to Heart (end of run)
 ### Surprise Party
 - RTA timing
-- Autostart
+- Autostart when selecting present
 - Split on interacting with present (end of run)
-- Split for each individual level of the party levels
+- Split for each individual party level
 ### DLC
 - RTA Timing
 - Split on End Star
