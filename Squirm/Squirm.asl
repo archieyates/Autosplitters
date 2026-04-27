@@ -133,6 +133,11 @@ init
     vars.Helper["Level"].Current = -1;
     vars.Helper["Level"].Old = -1; 
     
+    vars.inLevel = (Func<int, bool>)(level =>
+    {
+      return vars.Helper["Level"].Current == level;
+    });
+    
     vars.checkLevel = (Func<int, bool>)(level =>
     {
       return vars.Helper["Level"].Current == level && vars.Helper["Level"].Old != level;
@@ -206,13 +211,13 @@ init
       {"castleStar", new Func<bool>(() => vars.checkFlag("castleStar"))},
       {"towerStar", new Func<bool>(() => vars.checkFlag("towerStar"))},
       {"spaceStar", new Func<bool>(() => vars.checkFlag("spaceStar"))},
-      {"heart", new Func<bool>(() => vars.checkFlag("Cutscene") && vars.checkLevel(177))},
+      {"heart", new Func<bool>(() => vars.checkFlag("Cutscene") && vars.inLevel(177))},
       {"nexus", new Func<bool>(() => vars.activeScene == "Rainbow Nexus 0")},
       {"rainbowSun", new Func<bool>(() => vars.activeScene == "Rainbow Nexus BOSS")},
       {"trueNexus", new Func<bool>(() => vars.activeScene == "Nexus Core 0")},
       {"trueNexusBoss", new Func<bool>(() => vars.activeScene == "Rainbow Nexus ACTUAL BOSS")},
       {"dlcStar", new Func<bool>(() => vars.checkFlag("Cutscene") && vars.activeScene == "Rainbow Nexus END")} ,
-      {"present", new Func<bool>(() => vars.checkFlag("Cutscene") && vars.checkLevel(192))}  
+      {"present", new Func<bool>(() => vars.checkFlag("Cutscene") && vars.inLevel(192))}  
    };
 
     return true;
