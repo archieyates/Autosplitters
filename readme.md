@@ -6,3 +6,4 @@ Provided are some [LiveSplit](http://livesplit.github.io) [ASL](https://github.c
 - [Loop-Loop DX](https://www.speedrun.com/loop_loop)
 - [Doriano](https://www.speedrun.com/doriano)
 
+This repository will auto-mirror to github
